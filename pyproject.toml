@@ -1,0 +1,67 @@
+[project]
+name = "beai-rag"
+version = "0.1.0"
+description = "BEAI Studio - Knowledge Base & RAG module (workspace root)"
+requires-python = ">=3.12,<3.13"
+dependencies = ["beai-rag-core", "beai-rag-api", "beai-ingestion-worker"]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+beai-rag-core = { workspace = true }
+beai-rag-api = { workspace = true }
+beai-ingestion-worker = { workspace = true }
+
+[tool.uv.workspace]
+members = ["packages/beai_rag_core", "services/rag-api", "services/ingestion-worker"]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "pytest-asyncio>=0.25",
+  "mypy>=1.15",
+  "ruff>=0.11",
+  "testcontainers>=4.10",
+  "pip-licenses>=5.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["services/rag-api/app/db/alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "S", "ASYNC", "RUF", "SIM", "PTH", "T20"]
+ignore = ["S101"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "worker", "beai_rag_core", "tests"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S108", "S603", "S607"]
+"scripts/**" = ["T20"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+plugins = ["pydantic.mypy"]
+mypy_path = ["packages/beai_rag_core", "services/rag-api", "services/ingestion-worker"]
+explicit_package_bases = true
+exclude = ["services/rag-api/app/db/alembic/versions/"]
+
+[[tool.mypy.overrides]]
+module = ["aio_pika.*", "aiobotocore.*", "botocore.*", "testcontainers.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+markers = ["integration: needs Docker (testcontainers)"]
+filterwarnings = [
+  "ignore:Payload indexes have no effect in the local Qdrant:UserWarning",
+  "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+  "ignore:Api key is used with an insecure connection:UserWarning",
+]

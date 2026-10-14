@@ -1,0 +1,69 @@
+# BEAI RAG - developer entry points.
+SHELL := /bin/bash
+UV ?= uv
+RUN := $(UV) run
+API_DIR := services/rag-api
+INFRA := qdrant postgres redis rabbitmq minio
+
+.PHONY: help up down logs install migrate bootstrap run-api lint format typecheck test test-unit test-integration readyz show-collection phase1-check seed demo eval licenses openapi
+
+help:
+	@grep -E '^[a-z0-9-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-18s %s\n", $$1, $$2}'
+
+.env:
+	cp .env.example .env
+
+install: .env ## Install the Python workspace (uv)
+	$(UV) sync --frozen
+
+up: .env install ## Start the dev infrastructure, run migrations, create the Qdrant collection
+	docker compose up -d --wait $(INFRA)
+	$(MAKE) migrate
+
+down: ## Stop the dev stack (keeps volumes; use `docker compose down -v` to wipe)
+	docker compose down
+
+logs:
+	docker compose logs -f --tail=100
+
+migrate: ## Apply DB migrations and bootstrap Qdrant collection + bucket
+	cd $(API_DIR) && $(RUN) alembic upgrade head
+	cd $(API_DIR) && $(RUN) python -m app.bootstrap
+
+run-api: ## Run rag-api locally on :8000 against the compose stack
+	cd $(API_DIR) && $(RUN) uvicorn --factory app.main:create_app --host 0.0.0.0 --port 8000
+
+lint: ## ruff lint + format check
+	$(RUN) ruff check .
+	$(RUN) ruff format --check .
+
+format:
+	$(RUN) ruff format .
+	$(RUN) ruff check --fix .
+
+typecheck: ## mypy --strict
+	$(RUN) mypy packages/beai_rag_core/beai_rag_core services/rag-api/app services/ingestion-worker/worker tests scripts
+
+test: ## All tests (unit + integration via testcontainers; needs Docker)
+	$(RUN) pytest
+
+test-unit:
+	$(RUN) pytest -m "not integration"
+
+test-integration:
+	$(RUN) pytest -m integration
+
+show-collection: ## Print the Qdrant collection config (vectors, quantization, payload indexes)
+	cd $(API_DIR) && $(RUN) python -m app.bootstrap --show
+
+phase1-check: ## Phase 1 acceptance: start the API, print /readyz and the collection config
+	$(RUN) python scripts/phase1_check.py
+
+licenses: ## Python dependency licence report
+	$(RUN) pip-licenses --from=mixed --format=markdown --order=license
+
+seed demo eval:
+	@echo "'$@' is implemented in a later phase (see BEAI_RAG_BUILD_SPEC.md section 15)"; exit 1
+
+openapi: ## Regenerate docs/openapi.json
+	PYTHONPATH=$(API_DIR) $(RUN) python scripts/export_openapi.py

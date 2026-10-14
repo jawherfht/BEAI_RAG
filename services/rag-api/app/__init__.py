@@ -1,0 +1,1 @@
+"""BEAI RAG API service."""

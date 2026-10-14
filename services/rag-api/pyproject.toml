@@ -1,0 +1,28 @@
+[project]
+name = "beai-rag-api"
+version = "0.1.0"
+description = "BEAI RAG API: REST + SSE + WebSocket + gRPC"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "beai-rag-core",
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.34",
+  "alembic>=1.14",
+  "pyjwt[crypto]>=2.10",
+  "redis>=5.2",
+  "aio-pika>=9.5",
+  "aiobotocore>=2.17",
+  "prometheus-client>=0.21",
+  "httpx>=0.28",
+  "python-multipart>=0.0.20",
+]
+
+[tool.uv.sources]
+beai-rag-core = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]

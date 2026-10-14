@@ -1,0 +1,107 @@
+// gRPC contract for the Interaction Agents Service (spec section 7).
+// Tenant and agent travel in metadata ("x-beai-tenant-id", "x-beai-agent-id") set by the
+// trusted caller over mTLS, never in the message body. Implemented in Phase 4.
+syntax = "proto3";
+
+package beai.rag.v1;
+
+service RagService {
+  // Chunks only (for custom LLM flows).
+  rpc Retrieve(RetrieveRequest) returns (RetrieveResponse);
+  // Tokens, then final sources/confidence.
+  rpc Answer(AnswerRequest) returns (stream AnswerChunk);
+  rpc GetKnowledgeBaseStatus(StatusRequest) returns (StatusResponse);
+}
+
+enum Confidence {
+  CONFIDENCE_UNSPECIFIED = 0;
+  CONFIDENCE_LOW = 1;
+  CONFIDENCE_MEDIUM = 2;
+  CONFIDENCE_HIGH = 3;
+}
+
+message Persona {
+  string agent_name = 1;
+  string role = 2;
+  string instructions = 3;
+  string tone = 4;
+  string response_style = 5;
+  string boundaries = 6;
+}
+
+message ConversationTurn {
+  string role = 1;  // "user" | "assistant"
+  string text = 2;
+}
+
+message RetrieveRequest {
+  string question = 1;
+  string language = 2;
+  uint32 top_k = 3;  // 0 = knowledge base default
+}
+
+message RetrievedChunk {
+  string source_id = 1;
+  string file_name = 2;
+  uint32 page = 3;
+  string section = 4;
+  string url = 5;
+  string text = 6;
+  float score = 7;
+}
+
+message RetrieveResponse {
+  repeated RetrievedChunk chunks = 1;
+  Confidence confidence = 2;
+  bool fallback = 3;
+}
+
+message AnswerRequest {
+  string question = 1;
+  string language = 2;
+  Persona persona = 3;
+  repeated ConversationTurn conversation_history = 4;  // last 4 turns max
+}
+
+message Source {
+  string file_name = 1;
+  uint32 page = 2;
+  string section = 3;
+  string url = 4;
+  string snippet = 5;
+  float score = 6;
+}
+
+message Latency {
+  float embed_ms = 1;
+  float search_ms = 2;
+  float rerank_ms = 3;
+  float llm_ttft_ms = 4;
+  float total_ms = 5;
+}
+
+message AnswerFinal {
+  string display_text = 1;
+  string spoken_text = 2;
+  repeated Source sources = 3;
+  Confidence confidence = 4;
+  bool fallback = 5;
+  Latency latency = 6;
+}
+
+message AnswerChunk {
+  oneof payload {
+    string token = 1;
+    AnswerFinal final = 2;
+  }
+}
+
+message StatusRequest {}
+
+message StatusResponse {
+  uint32 files = 1;
+  uint32 urls = 2;
+  bool rag_enabled = 3;
+  string status = 4;
+  string label = 5;
+}
