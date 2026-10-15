@@ -10,7 +10,7 @@ for contributors and agents are in [`CLAUDE.md`](CLAUDE.md).
 | Phase | Scope | State |
 |---|---|---|
 | 1 Foundations | skeleton, compose, config, auth, DB + migrations, Qdrant collection, health, CI | **done** |
-| 2 Ingestion | upload/URL/business-info, worker, parse → chunk → embed → upsert | **built and tested; real-model acceptance blocked on Hugging Face access** |
+| 2 Ingestion | upload/URL/business-info, worker, parse → chunk → embed → upsert | **done — acceptance PASS with real models; 50-page CPU benchmark over budget, see [report](eval/reports/phase2-ingestion-benchmark.md)** |
 | 3 Retrieval | hybrid search, tenant filter, re-ranker, confidence, cache | not started |
 | 4 Generation | prompt, LLM streaming, citations, SSE/WS, gRPC | not started |
 | 5 Screen B UI | Next.js page + status chip | not started |
@@ -26,8 +26,8 @@ Requirements: Docker with Compose v2, [uv](https://docs.astral.sh/uv/), GNU make
    `kb_chunks` collection with payload indexes and the object-storage bucket
 3. `make test` — unit + integration tests (integration tests start their own containers)
 4. `make run-api` — API on http://localhost:8000 (`/healthz`, `/readyz`, `/metrics`, `/docs`)
-5. `make run-worker` — ingestion worker (needs an embedding server at `EMBED_URL`, e.g.
-   `docker compose --profile cpu-models up -d tei-cpu`, and Hugging Face access for models)
+5. `make run-embedder` (CPU embedding server, `EMBED_PROVIDER=local`, `EMBED_URL=http://localhost:8080`)
+   and `make run-worker` — the ingestion worker (models download from Hugging Face on first use)
 6. `make phase1-check` / `make phase2-check` — acceptance checks of each phase
 
 Other targets: `make lint`, `make typecheck`, `make show-collection`, `make openapi`,

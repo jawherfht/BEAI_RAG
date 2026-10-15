@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from make_returns_policy_pdf import build
+from make_returns_policy_pdf import build  # type: ignore[import-not-found]
 
 OUT = Path(__file__).parent / "bench" / "handbook-50p.pdf"
 WORDS = (
