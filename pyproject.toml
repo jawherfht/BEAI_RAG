@@ -42,7 +42,7 @@ known-first-party = ["app", "worker", "beai_rag_core", "tests"]
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S105", "S106", "S108", "S603", "S607", "RUF001"]  # multilingual test data
 "scripts/**" = ["T20"]
-"eval/**" = ["T20", "RUF001"]
+"eval/**" = ["T20", "RUF001", "S311", "SIM905"]
 "services/ingestion-worker/worker/chunking/sentences.py" = ["RUF001"]  # CJK/Arabic punctuation
 
 [tool.mypy]

@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from make_returns_policy_pdf import build  # noqa: E402
+from make_returns_policy_pdf import build
 
 OUT = Path(__file__).parent / "bench" / "handbook-50p.pdf"
 WORDS = (
@@ -52,7 +52,7 @@ def page(n: int, rng: random.Random) -> list[tuple[str, int, str]]:
     if n % 5 == 0:
         out.append(("H", 12, f"Table {n // 5}: limits by category"))
         out.append(("P", 10, "Category            Limit (EUR)     Approval        Notice (days)"))
-        for i in range(12):
+        for _ in range(12):
             out.append(
                 (
                     "P",
