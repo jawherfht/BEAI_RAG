@@ -9,8 +9,8 @@ for contributors and agents are in [`CLAUDE.md`](CLAUDE.md).
 
 | Phase | Scope | State |
 |---|---|---|
-| 1 Foundations | skeleton, compose, config, auth, DB + migrations, Qdrant collection, health, CI | **done — awaiting review** |
-| 2 Ingestion | upload/URL/business-info, worker, parse → chunk → embed → upsert | not started |
+| 1 Foundations | skeleton, compose, config, auth, DB + migrations, Qdrant collection, health, CI | **done** |
+| 2 Ingestion | upload/URL/business-info, worker, parse → chunk → embed → upsert | **built and tested; real-model acceptance blocked on Hugging Face access** |
 | 3 Retrieval | hybrid search, tenant filter, re-ranker, confidence, cache | not started |
 | 4 Generation | prompt, LLM streaming, citations, SSE/WS, gRPC | not started |
 | 5 Screen B UI | Next.js page + status chip | not started |
@@ -22,21 +22,24 @@ for contributors and agents are in [`CLAUDE.md`](CLAUDE.md).
 Requirements: Docker with Compose v2, [uv](https://docs.astral.sh/uv/), GNU make.
 
 1. `cp .env.example .env` (done automatically by `make up`)
-2. `make up` — starts Qdrant, Postgres, Redis, RabbitMQ, MinIO; runs migrations; creates the
+2. `make up` — starts Qdrant, Postgres, Redis, RabbitMQ, SeaweedFS (S3); runs migrations; creates the
    `kb_chunks` collection with payload indexes and the object-storage bucket
 3. `make test` — unit + integration tests (integration tests start their own containers)
 4. `make run-api` — API on http://localhost:8000 (`/healthz`, `/readyz`, `/metrics`, `/docs`)
-5. `make phase1-check` — prints `/readyz` and the Qdrant collection config
+5. `make run-worker` — ingestion worker (needs an embedding server at `EMBED_URL`, e.g.
+   `docker compose --profile cpu-models up -d tei-cpu`, and Hugging Face access for models)
+6. `make phase1-check` / `make phase2-check` — acceptance checks of each phase
 
 Other targets: `make lint`, `make typecheck`, `make show-collection`, `make openapi`,
-`make licenses`, `make down`.
+`make sample-data`, `make licenses`, `make down`.
 
 ## Layout
 
 ```
-packages/beai_rag_core/   shared: enums, TenantScope, Qdrant store (single tenant-filter point), DB models
+packages/beai_rag_core/   shared: TenantScope, Qdrant store (single tenant-filter point), DB models +
+                          repositories, queue topology, S3 storage, embedder clients
 services/rag-api/         FastAPI app (app/), Alembic migrations (app/db/alembic), Dockerfile
-services/ingestion-worker/ queue consumer (Phase 2)
+services/ingestion-worker/ queue consumer: Docling/crawler → chunker → embed → Qdrant
 proto/beai/rag/v1/        gRPC contract for the Interaction Agents Service
 tests/unit, tests/integration
 docs/                     architecture, API, ADRs (docs/decisions)

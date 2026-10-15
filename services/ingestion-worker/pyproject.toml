@@ -6,6 +6,11 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
   "beai-rag-core",
   "aio-pika>=9.5",
+  "docling>=2.130",
+  "trafilatura>=2.0",
+  "lingua-language-detector>=2.0",
+  "httpx>=0.28",
+  "lxml>=5.3",
 ]
 
 [tool.uv.sources]

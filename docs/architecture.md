@@ -17,7 +17,7 @@ Data & Persistence layer: **Knowledge / Vector DB (Qdrant)** and **Knowledge met
      Postgres ◄┘  │  │  └► Redis (answer cache, counters)
      (metadata)   │  └───► RabbitMQ ──► ingestion-worker ── parse → chunk → embed → upsert
                   ▼                          │
-               Qdrant ◄──────────────────────┘        MinIO/S3 (uploaded files)
+               Qdrant ◄──────────────────────┘     S3 / SeaweedFS (files)
           kb_chunks (dense + sparse)
 ```
 
@@ -40,6 +40,33 @@ Data & Persistence layer: **Knowledge / Vector DB (Qdrant)** and **Knowledge met
   object storage; concurrent, 2 s timeout each; 503 if any fails), `/metrics` (Prometheus).
   Embedder and LLM checks join `/readyz` in Phases 2 and 4.
 - **Errors** — one JSON shape `{"error": {"code", "message", "details"}}` for every error.
+
+## Implemented in Phase 2 — ingestion (async, off the live path)
+See [ADR 0007](decisions/0007-ingestion-pipeline.md) for the decisions.
+
+```
+POST /sources/files|urls|business-info
+  └─ validate (sniff type, size, zip bomb, macros) → S3 put → sources+job rows → commit
+     → publish ingest.index → 202
+ingestion-worker  (beai.ingest → ingest.index|reindex|delete|recrawl)
+  parsing    Docling (PDF/DOCX/PPTX/HTML/MD, page provenance, tables as Markdown, OCR)
+             | polite crawler + Trafilatura (URLs) | business-info renderer
+             → parsed-document cache (_parsed.json) → language (lingua)
+  chunking   structure-aware, token-based (embedding tokenizer)
+  embedding  [optional contextual prefix via LLM] → dense (TEI / vLLM) + BM25 (FastEmbed)
+  upsert     Qdrant batches of 128 → delete stale points (blue/green) → ready, kb_version+1
+  failures   transient: retry 2 s / 8 s / 32 s → ingest.dead; permanent: error at once
+```
+
+- **API**: `GET/PUT /knowledge-base` (settings; a chunk-size change re-indexes every source of the
+  agent), `GET /knowledge-base/status` (Persona Builder label), sources upload / list / delete /
+  reindex. All writes return 202.
+- **Shared core** (`beai_rag_core`): repositories (every query scoped by tenant + agent), queue
+  topology and publisher, S3 storage with tenant-prefixed keys, embedder interfaces
+  (`DenseEmbedder`, `SparseEncoder`, `TokenCounter`) chosen by config.
+- **Payload** of each point: `tenant_id, agent_id, knowledge_base_id, source_id, source_type,
+  file_name, url, title, page, page_end, section, chunk_index, text, context_prefix, lang,
+  embed_model, kb_version, created_at`.
 
 ## Latency rules (all phases)
 Nothing slow on the live path: parsing, crawling, chunking, embedding are async via RabbitMQ.

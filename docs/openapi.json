@@ -1,4 +1,648 @@
 {
+  "components": {
+    "schemas": {
+      "Body_upload_files_v1_agents__agent_id__sources_files_post": {
+        "properties": {
+          "files": {
+            "description": "1..n documents",
+            "items": {
+              "contentMediaType": "application/octet-stream",
+              "type": "string"
+            },
+            "title": "Files",
+            "type": "array"
+          }
+        },
+        "required": [
+          "files"
+        ],
+        "title": "Body_upload_files_v1_agents__agent_id__sources_files_post",
+        "type": "object"
+      },
+      "BusinessInfoIn": {
+        "additionalProperties": false,
+        "properties": {
+          "address": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Address",
+            "type": "string"
+          },
+          "company_name": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Company Name",
+            "type": "string"
+          },
+          "contact": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Contact",
+            "type": "string"
+          },
+          "faq": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/FaqItem"
+            },
+            "maxItems": 50,
+            "title": "Faq",
+            "type": "array"
+          },
+          "hours": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Hours",
+            "type": "string"
+          }
+        },
+        "title": "BusinessInfoIn",
+        "type": "object"
+      },
+      "FaqItem": {
+        "properties": {
+          "answer": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Answer",
+            "type": "string"
+          },
+          "question": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question",
+          "answer"
+        ],
+        "title": "FaqItem",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "KnowledgeBaseOut": {
+        "properties": {
+          "agent_id": {
+            "format": "uuid",
+            "title": "Agent Id",
+            "type": "string"
+          },
+          "chunk_overlap": {
+            "title": "Chunk Overlap",
+            "type": "integer"
+          },
+          "chunk_size": {
+            "title": "Chunk Size",
+            "type": "integer"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/SourceCountsOut"
+          },
+          "embed_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embed Model"
+          },
+          "fallback_message": {
+            "title": "Fallback Message",
+            "type": "string"
+          },
+          "hybrid_enabled": {
+            "title": "Hybrid Enabled",
+            "type": "boolean"
+          },
+          "kb_version": {
+            "title": "Kb Version",
+            "type": "integer"
+          },
+          "rag_enabled": {
+            "title": "Rag Enabled",
+            "type": "boolean"
+          },
+          "reindexing": {
+            "default": false,
+            "title": "Reindexing",
+            "type": "boolean"
+          },
+          "rerank_enabled": {
+            "title": "Rerank Enabled",
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/KnowledgeBaseStatus"
+          },
+          "top_k": {
+            "title": "Top K",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "agent_id",
+          "status",
+          "rag_enabled",
+          "chunk_size",
+          "chunk_overlap",
+          "top_k",
+          "fallback_message",
+          "hybrid_enabled",
+          "rerank_enabled",
+          "embed_model",
+          "kb_version",
+          "counts"
+        ],
+        "title": "KnowledgeBaseOut",
+        "type": "object"
+      },
+      "KnowledgeBaseSettingsIn": {
+        "additionalProperties": false,
+        "description": "PUT body. Omitted fields keep their current value (or the default on create).",
+        "properties": {
+          "chunk_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chunk Size"
+          },
+          "fallback_message": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fallback Message"
+          },
+          "hybrid_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hybrid Enabled"
+          },
+          "rag_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rag Enabled"
+          },
+          "rerank_enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rerank Enabled"
+          },
+          "top_k": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Top K"
+          }
+        },
+        "title": "KnowledgeBaseSettingsIn",
+        "type": "object"
+      },
+      "KnowledgeBaseStatus": {
+        "enum": [
+          "empty",
+          "indexing",
+          "ready",
+          "error"
+        ],
+        "title": "KnowledgeBaseStatus",
+        "type": "string"
+      },
+      "KnowledgeBaseStatusOut": {
+        "properties": {
+          "files": {
+            "title": "Files",
+            "type": "integer"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "rag_enabled": {
+            "title": "Rag Enabled",
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/KnowledgeBaseStatus"
+          },
+          "urls": {
+            "title": "Urls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "files",
+          "urls",
+          "rag_enabled",
+          "status",
+          "label"
+        ],
+        "title": "KnowledgeBaseStatusOut",
+        "type": "object"
+      },
+      "SourceAccepted": {
+        "properties": {
+          "duplicate": {
+            "default": false,
+            "title": "Duplicate",
+            "type": "boolean"
+          },
+          "file_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Name"
+          },
+          "source_id": {
+            "format": "uuid",
+            "title": "Source Id",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SourceStatus"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "source_id",
+          "status"
+        ],
+        "title": "SourceAccepted",
+        "type": "object"
+      },
+      "SourceCountsOut": {
+        "properties": {
+          "business_info": {
+            "title": "Business Info",
+            "type": "integer"
+          },
+          "files": {
+            "title": "Files",
+            "type": "integer"
+          },
+          "urls": {
+            "title": "Urls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "files",
+          "urls",
+          "business_info"
+        ],
+        "title": "SourceCountsOut",
+        "type": "object"
+      },
+      "SourceOut": {
+        "properties": {
+          "chunks": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chunks"
+          },
+          "crawl_depth": {
+            "title": "Crawl Depth",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "file_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Name"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "last_indexed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Indexed At"
+          },
+          "max_pages": {
+            "title": "Max Pages",
+            "type": "integer"
+          },
+          "mime_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mime Type"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages"
+          },
+          "recrawl_interval_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recrawl Interval Hours"
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SourceStatus"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "type": {
+            "$ref": "#/components/schemas/SourceType"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "status",
+          "file_name",
+          "mime_type",
+          "size_bytes",
+          "url",
+          "crawl_depth",
+          "max_pages",
+          "recrawl_interval_hours",
+          "title",
+          "language",
+          "pages",
+          "chunks",
+          "error",
+          "created_at",
+          "updated_at",
+          "last_indexed_at"
+        ],
+        "title": "SourceOut",
+        "type": "object"
+      },
+      "SourceStatus": {
+        "enum": [
+          "queued",
+          "parsing",
+          "chunking",
+          "embedding",
+          "ready",
+          "error",
+          "deleting"
+        ],
+        "title": "SourceStatus",
+        "type": "string"
+      },
+      "SourceType": {
+        "enum": [
+          "file",
+          "url",
+          "business_info"
+        ],
+        "title": "SourceType",
+        "type": "string"
+      },
+      "UrlSourceIn": {
+        "additionalProperties": false,
+        "properties": {
+          "crawl_depth": {
+            "default": 1,
+            "maximum": 3.0,
+            "minimum": 0.0,
+            "title": "Crawl Depth",
+            "type": "integer"
+          },
+          "max_pages": {
+            "default": 50,
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Max Pages",
+            "type": "integer"
+          },
+          "recrawl_interval_hours": {
+            "anyOf": [
+              {
+                "maximum": 8760.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recrawl Interval Hours"
+          },
+          "url": {
+            "format": "uri",
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "UrlSourceIn",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
   "info": {
     "title": "BEAI Knowledge Base & RAG API",
     "version": "0.1.0"
@@ -46,6 +690,736 @@
         "summary": "Readyz",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/knowledge-base": {
+      "get": {
+        "operationId": "get_knowledge_base_v1_agents__agent_id__knowledge_base_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Knowledge Base",
+        "tags": [
+          "knowledge-base"
+        ]
+      },
+      "put": {
+        "operationId": "put_knowledge_base_v1_agents__agent_id__knowledge_base_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeBaseSettingsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Knowledge Base",
+        "tags": [
+          "knowledge-base"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/knowledge-base/status": {
+      "get": {
+        "operationId": "get_knowledge_base_status_v1_agents__agent_id__knowledge_base_status_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeBaseStatusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Knowledge Base Status",
+        "tags": [
+          "knowledge-base"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/sources": {
+      "get": {
+        "operationId": "list_sources_v1_agents__agent_id__sources_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SourceOut"
+                  },
+                  "title": "Response List Sources V1 Agents  Agent Id  Sources Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Sources",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/sources/business-info": {
+      "put": {
+        "operationId": "put_business_info_v1_agents__agent_id__sources_business_info_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BusinessInfoIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceAccepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Business Info",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/sources/files": {
+      "post": {
+        "operationId": "upload_files_v1_agents__agent_id__sources_files_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_files_v1_agents__agent_id__sources_files_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SourceAccepted"
+                  },
+                  "title": "Response Upload Files V1 Agents  Agent Id  Sources Files Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Files",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/sources/urls": {
+      "post": {
+        "operationId": "add_url_v1_agents__agent_id__sources_urls_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UrlSourceIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceAccepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Url",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/sources/{source_id}": {
+      "delete": {
+        "operationId": "delete_source_v1_agents__agent_id__sources__source_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceAccepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Source",
+        "tags": [
+          "sources"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/sources/{source_id}/reindex": {
+      "post": {
+        "operationId": "reindex_source_v1_agents__agent_id__sources__source_id__reindex_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "title": "Source Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceAccepted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reindex Source",
+        "tags": [
+          "sources"
         ]
       }
     }

@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.api import health
+from app.api import health, knowledge_base, sources
 from app.api.errors import install_error_handlers
 from app.config import Settings, get_settings
 from app.resources import Resources
@@ -36,4 +36,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     install_error_handlers(app)
     install_http_metrics(app)
     app.include_router(health.router)
+    app.include_router(knowledge_base.router)
+    app.include_router(sources.router)
     return app

@@ -5,5 +5,5 @@ IMAGES = {
     "postgres": "postgres:16-alpine",
     "redis": "redis:7.4-alpine",
     "rabbitmq": "rabbitmq:3.13-management-alpine",
-    "minio": "pgsty/minio:RELEASE.2026-08-04T00-00-00Z",
+    "seaweedfs": "chrislusf/seaweedfs:4.47",
 }

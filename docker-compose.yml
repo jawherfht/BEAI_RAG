@@ -1,6 +1,8 @@
 # BEAI RAG dev stack.
-#   docker compose up -d                      -> infrastructure + rag-api
-#   docker compose --profile gpu up -d        -> + TEI / vLLM / re-ranker (added in Phases 2-4)
+#   docker compose up -d                          -> infrastructure only (make up)
+#   docker compose --profile app up -d            -> + rag-api + ingestion-worker
+#   docker compose --profile cpu-models up -d     -> + TEI on CPU (embeddings, no GPU)
+#   docker compose --profile gpu up -d            -> + TEI on GPU (vLLM / re-ranker: Phases 3-4)
 name: beai-rag
 
 x-healthcheck: &hc
@@ -46,19 +48,25 @@ services:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       <<: *hc
 
-  minio:
-    # Official minio/minio images are no longer published on Docker Hub; pgsty/minio is a
-    # maintained build of the same server. Dev only - prod uses S3-compatible storage.
+  seaweedfs:
+    # S3-compatible object storage for dev (Apache-2.0). Prod uses S3-compatible storage.
+    # Credentials live in deploy/dev/seaweedfs-s3.json and must match S3_ACCESS_KEY/S3_SECRET_KEY.
     # See docs/decisions/0003-dev-infrastructure.md.
-    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
-    command: ["server", "/data", "--console-address", ":9001"]
-    environment:
-      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minio}
-      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minio123}
-    ports: ["9000:9000", "9001:9001"]
-    volumes: [minio_data:/data]
+    image: chrislusf/seaweedfs:4.47
+    command:
+      - server
+      - -dir=/data
+      - -s3
+      - -s3.port=8333
+      - -s3.config=/etc/seaweedfs/s3.json
+      - -master.volumeSizeLimitMB=1024
+      - -volume.max=0
+    ports: ["9000:8333"]
+    volumes:
+      - seaweedfs_data:/data
+      - ./deploy/dev/seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8333/healthz"]
       <<: *hc
 
   rag-api:
@@ -72,16 +80,56 @@ services:
       DATABASE_URL: postgresql+asyncpg://beai:beai@postgres:5432/beai_rag
       REDIS_URL: redis://redis:6379/0
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
-      S3_ENDPOINT: http://minio:9000
+      S3_ENDPOINT: http://seaweedfs:8333
     ports: ["8000:8000"]
     depends_on:
       qdrant: {condition: service_healthy}
       postgres: {condition: service_healthy}
       redis: {condition: service_healthy}
       rabbitmq: {condition: service_healthy}
-      minio: {condition: service_healthy}
+      seaweedfs: {condition: service_healthy}
+
+  ingestion-worker:
+    build:
+      context: .
+      dockerfile: services/ingestion-worker/Dockerfile
+    profiles: ["app"]
+    env_file: [.env]
+    environment:
+      QDRANT_URL: http://qdrant:6333
+      DATABASE_URL: postgresql+asyncpg://beai:beai@postgres:5432/beai_rag
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      S3_ENDPOINT: http://seaweedfs:8333
+      EMBED_URL: ${EMBED_URL_IN_COMPOSE:-http://tei:80}
+    volumes: [model_cache:/models]
+    depends_on:
+      qdrant: {condition: service_healthy}
+      postgres: {condition: service_healthy}
+      rabbitmq: {condition: service_healthy}
+      seaweedfs: {condition: service_healthy}
+
+  # Embedding server (Text Embeddings Inference). Whether TEI serves the chosen model is
+  # verified in docs/decisions/0001-models.md; if not, EMBED_PROVIDER=vllm is the fallback.
+  tei:
+    image: ghcr.io/huggingface/text-embeddings-inference:1.8
+    profiles: ["gpu"]
+    command: ["--model-id", "${EMBED_MODEL:-microsoft/harrier-oss-v1-0.6b}", "--revision", "${EMBED_MODEL_REVISION:-main}"]
+    ports: ["8080:80"]
+    volumes: [model_cache:/data]
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]
+
+  tei-cpu:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.8
+    profiles: ["cpu-models"]
+    command: ["--model-id", "${EMBED_MODEL:-microsoft/harrier-oss-v1-0.6b}", "--revision", "${EMBED_MODEL_REVISION:-main}"]
+    ports: ["8080:80"]
+    volumes: [model_cache:/data]
 
 volumes:
+  model_cache:
   qdrant_data:
   postgres_data:
-  minio_data:
+  seaweedfs_data:

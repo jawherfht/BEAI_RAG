@@ -18,7 +18,9 @@ from testcontainers.core.container import DockerContainer
 from tests.integration.images import IMAGES
 
 QDRANT_API_KEY = "it-qdrant-key"
-ALEMBIC_INI = Path(__file__).resolve().parents[2] / "services/rag-api/alembic.ini"
+ROOT = Path(__file__).resolve().parents[2]
+ALEMBIC_INI = ROOT / "services/rag-api/alembic.ini"
+SEAWEEDFS_S3_CONFIG = ROOT / "deploy/dev/seaweedfs-s3.json"
 
 
 def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
@@ -87,10 +89,12 @@ def _start(name: str) -> DockerContainer:
     else:
         c = (
             DockerContainer(image)
-            .with_env("MINIO_ROOT_USER", "minio")
-            .with_env("MINIO_ROOT_PASSWORD", "minio123")
-            .with_command("server /data")
-            .with_exposed_ports(9000)
+            .with_volume_mapping(str(SEAWEEDFS_S3_CONFIG), "/etc/seaweedfs/s3.json", "ro")
+            .with_command(
+                "server -dir=/data -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json "
+                "-master.volumeSizeLimitMB=64 -volume.max=0"
+            )
+            .with_exposed_ports(8333)
         )
     c.start()
     return c
@@ -111,10 +115,8 @@ def _wait_ready(name: str, c: DockerContainer) -> None:
         amqp_port = int(c.get_exposed_port(5672))
         _wait(lambda: _amqp_ready(host, amqp_port), name)
     else:
-        port = c.get_exposed_port(9000)
-        _wait(
-            lambda: httpx.get(f"http://{host}:{port}/minio/health/ready").status_code == 200, name
-        )
+        port = c.get_exposed_port(8333)
+        _wait(lambda: httpx.get(f"http://{host}:{port}/healthz").status_code == 200, name)
 
 
 @pytest.fixture(scope="session")
@@ -136,7 +138,7 @@ def infra() -> Iterator[Infra]:
             database_url=f"postgresql+asyncpg://beai:beai@{addr('postgres', 5432)}/beai_rag",
             redis_url=f"redis://{addr('redis', 6379)}/0",
             rabbitmq_url=f"amqp://guest:guest@{addr('rabbitmq', 5672)}/",
-            s3_endpoint=f"http://{addr('minio', 9000)}",
+            s3_endpoint=f"http://{addr('seaweedfs', 8333)}",
         )
     finally:
         for c in containers.values():
@@ -153,3 +155,121 @@ def alembic_config(database_url: str) -> Config:
 def migrated(infra: Infra) -> Infra:
     command.upgrade(alembic_config(infra.database_url), "head")
     return infra
+
+
+# ---- Phase 2 fixtures: API client + in-process worker ---------------------------------
+
+import contextlib  # noqa: E402
+import uuid  # noqa: E402
+from collections.abc import AsyncIterator  # noqa: E402
+
+import aio_pika  # noqa: E402
+from httpx import ASGITransport, AsyncClient  # noqa: E402
+
+from app.config import Settings  # noqa: E402
+from app.main import create_app  # noqa: E402
+from app.resources import Resources  # noqa: E402
+from beai_rag_core.embedding.tokenizer import WhitespaceTokenCounter  # noqa: E402
+from beai_rag_core.enums import JobKind  # noqa: E402
+from beai_rag_core.queue import declare_topology, queue_for  # noqa: E402
+from tests.fakes import HashingEmbedder, HashingSparse  # noqa: E402
+from tests.helpers import make_settings, make_token  # noqa: E402
+from worker.consumer import consume  # noqa: E402
+from worker.parsers.docling_parser import DoclingParser  # noqa: E402
+from worker.parsers.web_crawler import WebCrawler  # noqa: E402
+from worker.pipeline import IngestionPipeline  # noqa: E402
+
+
+@dataclass
+class Tenant:
+    tenant_id: uuid.UUID
+    agent_id: uuid.UUID
+
+    @property
+    def headers(self) -> dict[str, str]:
+        return {"Authorization": f"Bearer {make_token(self.tenant_id, [self.agent_id])}"}
+
+    @property
+    def base(self) -> str:
+        return f"/v1/agents/{self.agent_id}"
+
+
+def new_tenant() -> Tenant:
+    return Tenant(uuid.uuid4(), uuid.uuid4())
+
+
+def api_settings(infra: Infra, **overrides: object) -> Settings:
+    values: dict[str, object] = {
+        **infra.settings_overrides(),
+        "qdrant_auto_create": True,
+        "s3_auto_create_bucket": True,
+        "readiness_timeout_s": 3.0,
+        **overrides,
+    }
+    return make_settings(**values)
+
+
+@dataclass
+class Api:
+    client: AsyncClient
+    resources: Resources
+
+
+@contextlib.asynccontextmanager
+async def running_api(infra: Infra, **overrides: object) -> AsyncIterator[Api]:
+    app = create_app(api_settings(infra, **overrides))
+    async with app.router.lifespan_context(app):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://api") as client:
+            yield Api(client, app.state.resources)
+
+
+async def drain_queue(
+    rabbitmq_url: str, kind: JobKind
+) -> list[aio_pika.abc.AbstractIncomingMessage]:
+    connection = await aio_pika.connect(rabbitmq_url)
+    async with connection:
+        channel = await connection.channel()
+        await declare_topology(channel)
+        queue = await channel.get_queue(queue_for(kind))
+        out = []
+        while (msg := await queue.get(no_ack=True, fail=False)) is not None:
+            out.append(msg)
+        return out
+
+
+TEST_RETRY_BASE_MS = 200
+
+
+@dataclass
+class Worker:
+    pipeline: IngestionPipeline
+    dense: HashingEmbedder
+
+
+@contextlib.asynccontextmanager
+async def running_worker(
+    api: Api, *, dense: HashingEmbedder | None = None
+) -> AsyncIterator[Worker]:
+    r = api.resources
+    dense = dense or HashingEmbedder(r.settings.embed_dim)
+    pipeline = IngestionPipeline(
+        sessionmaker=r.sessionmaker,
+        store=r.store,
+        storage=r.storage,
+        dense=dense,
+        sparse=HashingSparse(),
+        counter=WhitespaceTokenCounter(),
+        parser=DoclingParser(ocr=False),
+        crawler=WebCrawler(),
+        embed_model_tag="test-hashing@1",
+    )
+    connection = await aio_pika.connect_robust(r.settings.rabbitmq_url.get_secret_value())
+    channel = await connection.channel()
+    await channel.set_qos(prefetch_count=2)
+    await declare_topology(channel, TEST_RETRY_BASE_MS)
+    await consume(channel, pipeline, TEST_RETRY_BASE_MS)
+    try:
+        yield Worker(pipeline, dense)
+    finally:
+        await connection.close()

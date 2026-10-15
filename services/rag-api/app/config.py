@@ -30,24 +30,17 @@ class Settings(CoreSettings):
     s3_auto_create_bucket: bool = True
     readiness_timeout_s: float = 2.0
 
-    # Model/serving settings (used from Phase 2 on; declared now so config is complete).
-    embed_provider: Literal["tei", "vllm", "local"] = "tei"
-    embed_url: str = "http://localhost:8080"
+    # Model/serving settings shared with the worker live in CoreSettings.
     rerank_url: str = "http://localhost:8081"
     rerank_model: str = "Qwen/Qwen3-Reranker-0.6B"
-    llm_base_url: str = "http://localhost:8000/v1"
-    llm_model: str = "Qwen3.8-27B"
-    llm_api_key: SecretStr = SecretStr("not-needed-locally")
-    llm_disable_thinking: bool = True
-    llm_max_tokens: int = Field(default=200, gt=0)
-    llm_temperature: float = Field(default=0.2, ge=0.0, le=2.0)
 
-    score_threshold: float = Field(default=0.45, ge=0.0, le=1.0)
     conf_high: float = Field(default=0.70, ge=0.0, le=1.0)
     conf_mid: float = Field(default=0.55, ge=0.0, le=1.0)
-    contextual_chunks: bool = False
     answer_cache_ttl_s: int = Field(default=86400, gt=0)
-    max_upload_mb: int = Field(default=50, gt=0)
+    max_files_per_upload: int = Field(default=20, gt=0)
+    # Zip-based uploads (DOCX/PPTX): limits against zip bombs.
+    max_zip_uncompressed_mb: int = Field(default=500, gt=0)
+    max_zip_entries: int = Field(default=10000, gt=0)
     langfuse_host: str | None = None
 
     @field_validator("jwt_algorithms", mode="before")

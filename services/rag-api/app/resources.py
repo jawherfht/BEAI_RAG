@@ -9,9 +9,10 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from app.config import Settings
-from app.storage import ObjectStorage
 from beai_rag_core.db.session import make_engine, make_sessionmaker
 from beai_rag_core.qdrant_store import CollectionSpec, QdrantStore
+from beai_rag_core.queue import QueuePublisher
+from beai_rag_core.storage import ObjectStorage
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ class Resources:
     sessionmaker: async_sessionmaker[AsyncSession]
     redis: Redis
     storage: ObjectStorage
+    publisher: QueuePublisher
 
     @classmethod
     def create(cls, settings: Settings) -> Resources:
@@ -42,6 +44,7 @@ class Resources:
             sessionmaker=make_sessionmaker(engine),
             redis=Redis.from_url(settings.redis_url, socket_timeout=settings.readiness_timeout_s),
             storage=ObjectStorage(settings),
+            publisher=QueuePublisher(settings.rabbitmq_url.get_secret_value()),
         )
 
     async def bootstrap(self) -> None:
@@ -59,6 +62,7 @@ class Resources:
                 logger.exception("could not ensure object storage bucket")
 
     async def close(self) -> None:
+        await self.publisher.close()
         await self.store.close()
         await self.redis.aclose()
         await self.engine.dispose()

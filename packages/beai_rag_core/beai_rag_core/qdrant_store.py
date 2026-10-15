@@ -207,6 +207,30 @@ class QdrantStore:
             wait=True,
         )
 
+    async def delete_stale_points(
+        self, scope: TenantScope, source_id: UUID, keep: Sequence[UUID]
+    ) -> None:
+        """Blue/green swap: delete the source's points that are not in ``keep``.
+
+        Called after the new points are written, so answers never go empty during reindex.
+        """
+        await self._client.delete(
+            collection_name=self._spec.name,
+            points_selector=qm.FilterSelector(
+                filter=qm.Filter(
+                    must=scope_filter(scope, self._source_condition(source_id)).must,
+                    must_not=[qm.HasIdCondition(has_id=[str(k) for k in keep])],
+                )
+            ),
+            wait=True,
+        )
+
+    async def upsert_batched(
+        self, scope: TenantScope, points: Sequence[ChunkPoint], batch_size: int = 128
+    ) -> None:
+        for i in range(0, len(points), batch_size):
+            await self.upsert(scope, points[i : i + batch_size])
+
     @staticmethod
     def _source_condition(source_id: UUID | None) -> list[qm.Condition]:
         if source_id is None:

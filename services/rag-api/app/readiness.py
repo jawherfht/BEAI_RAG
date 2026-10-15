@@ -8,7 +8,6 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-import aio_pika
 from sqlalchemy import text
 
 from app.resources import Resources
@@ -45,17 +44,14 @@ async def check_redis(r: Resources) -> None:
 
 
 async def check_rabbitmq(r: Resources) -> None:
-    conn = await aio_pika.connect(
-        r.settings.rabbitmq_url.get_secret_value(), timeout=r.settings.readiness_timeout_s
-    )
-    await conn.close()
+    await r.publisher.ping()
 
 
 async def check_object_storage(r: Resources) -> None:
     await r.storage.ping()
 
 
-# Embedder (Phase 2) and LLM (Phase 4) checks are added to this registry in those phases.
+# Embedder (Phase 3, first used by the API there) and LLM (Phase 4) checks join later.
 CHECKS: dict[str, Check] = {
     "qdrant": check_qdrant,
     "postgres": check_postgres,

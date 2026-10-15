@@ -3,9 +3,9 @@ SHELL := /bin/bash
 UV ?= uv
 RUN := $(UV) run
 API_DIR := services/rag-api
-INFRA := qdrant postgres redis rabbitmq minio
+INFRA := qdrant postgres redis rabbitmq seaweedfs
 
-.PHONY: help up down logs install migrate bootstrap run-api lint format typecheck test test-unit test-integration readyz show-collection phase1-check seed demo eval licenses openapi
+.PHONY: help up down logs install migrate bootstrap run-api run-worker phase2-check sample-data lint format typecheck test test-unit test-integration readyz show-collection phase1-check seed demo eval licenses openapi
 
 help:
 	@grep -E '^[a-z0-9-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-18s %s\n", $$1, $$2}'
@@ -42,7 +42,7 @@ format:
 	$(RUN) ruff check --fix .
 
 typecheck: ## mypy --strict
-	$(RUN) mypy packages/beai_rag_core/beai_rag_core services/rag-api/app services/ingestion-worker/worker tests scripts
+	$(RUN) mypy packages/beai_rag_core/beai_rag_core services/rag-api/app services/ingestion-worker/worker tests scripts eval
 
 test: ## All tests (unit + integration via testcontainers; needs Docker)
 	$(RUN) pytest
@@ -58,6 +58,15 @@ show-collection: ## Print the Qdrant collection config (vectors, quantization, p
 
 phase1-check: ## Phase 1 acceptance: start the API, print /readyz and the collection config
 	$(RUN) python scripts/phase1_check.py
+
+phase2-check: ## Phase 2 acceptance with real models (needs TEI + Hugging Face access)
+	$(RUN) python scripts/phase2_check.py
+
+run-worker: ## Run the ingestion worker locally against the compose stack
+	cd services/ingestion-worker && $(RUN) python -m worker.main
+
+sample-data: ## (Re)generate eval/datasets/kb1_retail/returns-policy.pdf
+	$(RUN) python eval/datasets/make_returns_policy_pdf.py
 
 licenses: ## Python dependency licence report
 	$(RUN) pip-licenses --from=mixed --format=markdown --order=license
