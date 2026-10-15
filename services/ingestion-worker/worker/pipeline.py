@@ -10,6 +10,7 @@ import asyncio
 import json
 import logging
 import tempfile
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
@@ -118,8 +119,11 @@ class IngestionPipeline:
     # ---- index / reindex / recrawl ------------------------------------------------------
 
     async def _index(self, job: IngestJob) -> None:
+        timings: dict[str, float] = {}
+        t0 = time.monotonic()
         snap = await self._start(job)
         doc = await self._parsed_document(job, snap)
+        timings["parse"] = time.monotonic() - t0
         if (
             job.kind is JobKind.RECRAWL
             and doc.content_hash
@@ -132,17 +136,22 @@ class IngestionPipeline:
         await self._set_status(job, SourceStatus.CHUNKING)
         if doc.language is None:
             doc.language = await asyncio.to_thread(detect_language, doc.plain_text(4000))
+        t = time.monotonic()
         chunks = Chunker(self._counter, snap.chunk_size, snap.chunk_overlap).chunk(doc)
+        timings["chunk"] = time.monotonic() - t
         if not chunks:
             raise ParseError("No text could be extracted from this source")
 
         await self._set_status(job, SourceStatus.EMBEDDING)
+        t = time.monotonic()
         prefixes = await self._prefixes(doc, chunks)
         embed_inputs = [
             f"{p}\n{c.text}" if p else c.text for p, c in zip(prefixes, chunks, strict=True)
         ]
         dense = await self._dense.embed_documents(embed_inputs)
         sparse = await self._sparse.encode_documents(embed_inputs)
+        timings["embed"] = time.monotonic() - t
+        t = time.monotonic()
         points = [
             ChunkPoint(
                 id=point_id(job.source_id, c.index, snap.kb_version),
@@ -156,7 +165,16 @@ class IngestionPipeline:
         # Blue/green: write the new points first, then drop the old ones.
         await self._store.upsert_batched(snap.scope, points, self._batch)
         await self._store.delete_stale_points(snap.scope, job.source_id, [p.id for p in points])
+        timings["upsert"] = time.monotonic() - t
         await self._finish(job, snap, doc, len(chunks))
+        logger.info(
+            "indexed source %s: pages=%s chunks=%d %s total=%.1fs",
+            job.source_id,
+            doc.pages,
+            len(chunks),
+            " ".join(f"{k}={v:.1f}s" for k, v in timings.items()),
+            time.monotonic() - t0,
+        )
 
     async def _start(self, job: IngestJob) -> SourceSnapshot:
         async with self._sm.begin() as session:
@@ -192,7 +210,9 @@ class IngestionPipeline:
 
     async def _parsed_document(self, job: IngestJob, snap: SourceSnapshot) -> ParsedDocument:
         cache_key = parsed_cache_key(snap.scope, job.source_id)
-        if job.kind is JobKind.REINDEX:
+        # A source's stored file never changes (business info deletes the cache on update), so
+        # reindex jobs and retries re-chunk from the cache; only a recrawl must fetch again.
+        if job.kind is not JobKind.RECRAWL:
             cached = await self._storage.get_optional(cache_key)
             if cached is not None:
                 return ParsedDocument.from_json(json.loads(cached))

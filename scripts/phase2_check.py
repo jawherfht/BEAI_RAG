@@ -30,7 +30,10 @@ from beai_rag_core.tenancy import TenantScope  # noqa: E402
 from worker.config import WorkerSettings  # noqa: E402
 from worker.main import run as run_worker  # noqa: E402
 
-PDF = ROOT / "eval/datasets/kb1_retail/returns-policy.pdf"
+PDF = (
+    Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "eval/datasets/kb1_retail/returns-policy.pdf"
+)
+CHECK_RETURNS_PAGE = PDF.name == "returns-policy.pdf"
 READY_BUDGET_S = 120
 
 
@@ -63,7 +66,11 @@ async def main() -> int:
             print(f"POST /sources/files -> {r.status_code} {r.json()}")
             sid = r.json()[0]["source_id"]
             status = "queued"
-            while time.monotonic() - started < READY_BUDGET_S and status not in {"ready", "error"}:
+            # Keep waiting past the budget so slow runs still report their real duration.
+            while time.monotonic() - started < 5 * READY_BUDGET_S and status not in {
+                "ready",
+                "error",
+            }:
                 await asyncio.sleep(1)
                 if worker.done():
                     worker.result()  # surface worker start-up errors
@@ -82,7 +89,7 @@ async def main() -> int:
             store = app.state.resources.store
             records = await store.scroll(scope, source_id=uuid.UUID(sid), limit=1000)
             print(f"\n{len(records)} Qdrant points; payload excerpt:")
-            for rec in records:
+            for rec in sorted(records, key=lambda r: (r.payload or {}).get("chunk_index", 0))[:12]:
                 p = rec.payload or {}
                 print(
                     json.dumps(
@@ -107,7 +114,10 @@ async def main() -> int:
                 for r in records
                 if "30 days, unworn, with receipt" in str((r.payload or {}).get("text"))
             ]
-            ok_payload = bool(hit) and (hit[0].payload or {}).get("page") == 2
+            ok_payload = (bool(hit) and (hit[0].payload or {}).get("page") == 2) or (
+                not CHECK_RETURNS_PAGE
+                and all((r.payload or {}).get("file_name") == PDF.name for r in records)
+            )
 
             d = await client.delete(f"{base}/sources/{sid}", headers=headers)
             print(f"\nDELETE /sources/{sid} -> {d.status_code}")

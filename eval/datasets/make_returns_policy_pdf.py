@@ -57,7 +57,7 @@ def _content(lines: list[tuple[str, int, str]]) -> bytes:
     return b"\n".join(out)
 
 
-def build() -> bytes:
+def build(pages_spec: list[list[tuple[str, int, str]]] | None = None) -> bytes:
     objects: list[bytes] = []
 
     def add(body: bytes) -> int:
@@ -71,7 +71,7 @@ def build() -> bytes:
         b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"
     )
     page_ids = []
-    for lines in PAGES:
+    for lines in pages_spec or PAGES:
         stream = _content(lines)
         content = add(b"<< /Length %d >>\nstream\n" % len(stream) + stream + b"\nendstream")
         page_ids.append(

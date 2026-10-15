@@ -96,6 +96,10 @@ class ObjectStorage:
                 return None
             raise
 
+    async def delete(self, key: str) -> None:
+        async with self.client() as c:
+            await c.delete_object(Bucket=self.bucket, Key=key)
+
     async def delete_prefix(self, prefix: str) -> int:
         """Delete every object under a (tenant-prefixed) key prefix."""
         if not prefix.startswith("tenants/") or not prefix.endswith("/"):

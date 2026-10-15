@@ -9,8 +9,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # Real environment variables always override .env values.
 ENV_FILES = ("../../.env", "../.env", ".env")
 
+# Verbatim from the harrier-oss-v1 card (prompt "web_search_query"); see ADR 0001.
 DEFAULT_QUERY_TEMPLATE = (
-    "Instruct: Given a question, retrieve passages from the knowledge base that answer it\n"
+    "Instruct: Given a web search query, retrieve relevant passages that answer the query\n"
     "Query: {text}"
 )
 
@@ -38,7 +39,7 @@ class CoreSettings(BaseSettings):
     embed_provider: Literal["tei", "vllm", "local"] = "tei"
     embed_url: str = "http://localhost:8080"
     embed_model: str = "microsoft/harrier-oss-v1-0.6b"
-    embed_model_revision: str = "main"
+    embed_model_revision: str = "f9b9dc8d367d443f2479d27aa5d8d2850c0774ee"
     embed_dim: int = Field(default=1024, gt=0)
     # Query-side instruction required by the model card ({text} is replaced by the question).
     # Documents are embedded without any instruction. See docs/decisions/0001-models.md.
@@ -52,7 +53,7 @@ class CoreSettings(BaseSettings):
 
     # LLM (OpenAI-compatible). Used by generation (Phase 4) and contextual chunks.
     llm_base_url: str = "http://localhost:8000/v1"
-    llm_model: str = "Qwen3.8-27B"
+    llm_model: str = "Qwen/Qwen3.8-27B"
     llm_api_key: SecretStr = SecretStr("not-needed-locally")
     llm_disable_thinking: bool = True
     llm_max_tokens: int = Field(default=200, gt=0)

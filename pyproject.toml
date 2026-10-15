@@ -3,7 +3,7 @@ name = "beai-rag"
 version = "0.1.0"
 description = "BEAI Studio - Knowledge Base & RAG module (workspace root)"
 requires-python = ">=3.12,<3.13"
-dependencies = ["beai-rag-core", "beai-rag-api", "beai-ingestion-worker"]
+dependencies = ["beai-rag-core", "beai-rag-api", "beai-ingestion-worker", "beai-embed-server"]
 
 [tool.uv]
 package = false
@@ -12,9 +12,10 @@ package = false
 beai-rag-core = { workspace = true }
 beai-rag-api = { workspace = true }
 beai-ingestion-worker = { workspace = true }
+beai-embed-server = { workspace = true }
 
 [tool.uv.workspace]
-members = ["packages/beai_rag_core", "services/rag-api", "services/ingestion-worker"]
+members = ["packages/beai_rag_core", "services/rag-api", "services/ingestion-worker", "services/embed-server"]
 
 [dependency-groups]
 dev = [
@@ -48,12 +49,12 @@ known-first-party = ["app", "worker", "beai_rag_core", "tests"]
 strict = true
 python_version = "3.12"
 plugins = ["pydantic.mypy"]
-mypy_path = ["packages/beai_rag_core", "services/rag-api", "services/ingestion-worker"]
+mypy_path = ["packages/beai_rag_core", "services/rag-api", "services/ingestion-worker", "services/embed-server"]
 explicit_package_bases = true
 exclude = ["services/rag-api/app/db/alembic/versions/"]
 
 [[tool.mypy.overrides]]
-module = ["aio_pika.*", "aiobotocore.*", "botocore.*", "testcontainers.*", "lxml.*", "fastembed.*", "trafilatura.*"]
+module = ["aio_pika.*", "aiobotocore.*", "botocore.*", "testcontainers.*", "lxml.*", "fastembed.*", "trafilatura.*", "sentence_transformers.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

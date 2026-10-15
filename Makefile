@@ -5,7 +5,7 @@ RUN := $(UV) run
 API_DIR := services/rag-api
 INFRA := qdrant postgres redis rabbitmq seaweedfs
 
-.PHONY: help up down logs install migrate bootstrap run-api run-worker phase2-check sample-data lint format typecheck test test-unit test-integration readyz show-collection phase1-check seed demo eval licenses openapi
+.PHONY: help up down logs install migrate bootstrap run-api run-worker run-embedder phase2-check sample-data lint format typecheck test test-unit test-integration readyz show-collection phase1-check seed demo eval licenses openapi
 
 help:
 	@grep -E '^[a-z0-9-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-18s %s\n", $$1, $$2}'
@@ -42,7 +42,7 @@ format:
 	$(RUN) ruff check --fix .
 
 typecheck: ## mypy --strict
-	$(RUN) mypy packages/beai_rag_core/beai_rag_core services/rag-api/app services/ingestion-worker/worker tests scripts eval
+	$(RUN) mypy packages/beai_rag_core/beai_rag_core services/rag-api/app services/ingestion-worker/worker services/embed-server/embed_server tests scripts eval
 
 test: ## All tests (unit + integration via testcontainers; needs Docker)
 	$(RUN) pytest
@@ -60,7 +60,10 @@ phase1-check: ## Phase 1 acceptance: start the API, print /readyz and the collec
 	$(RUN) python scripts/phase1_check.py
 
 phase2-check: ## Phase 2 acceptance with real models (needs TEI + Hugging Face access)
-	$(RUN) python scripts/phase2_check.py
+	$(RUN) python scripts/phase2_check.py $(PDF)
+
+run-embedder: ## CPU embedding server on :8080 (TEI /embed contract; EMBED_PROVIDER=local)
+	cd services/embed-server && $(RUN) uvicorn --factory embed_server.main:create_app --port 8080
 
 run-worker: ## Run the ingestion worker locally against the compose stack
 	cd services/ingestion-worker && $(RUN) python -m worker.main

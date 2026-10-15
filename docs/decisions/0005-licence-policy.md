@@ -17,9 +17,12 @@ CC-BY-NC / Gemma / Llama terms), and allow **permissive transitive libraries**
 (BSD, ISC, PSF, and unmodified MPL-2.0). Copyleft (GPL/AGPL/LGPL) stays forbidden in anything
 shipped. The Phase 7 licence gate will enforce this allow-list.
 
-## Findings after Phase 2 dependencies (2026-10-15) — open
+## Findings after Phase 2 dependencies (2026-10-15)
 
 `make licenses` over 192 packages:
+
+Decisions (product owner, 2026-10-15): **CPU-only torch** for the worker (no NVIDIA wheels);
+**`tld` accepted, unmodified, under MPL-1.1**.
 
 1. **NVIDIA CUDA runtime wheels** (`nvidia-cublas`, `nvidia-cudnn-cu13`, … — NVIDIA proprietary,
    redistributable) arrive because Docling depends on `torch`, and the default PyPI `torch`
@@ -33,3 +36,10 @@ shipped. The Phase 7 licence gate will enforce this allow-list.
 3. `torch` includes `BSL-1.0` = Boost Software License (permissive) — fine.
 4. `py_rust_stemmers` (FastEmbed BM25 stemmer) has no licence metadata; the upstream project
    states MIT — to confirm before production.
+
+Status of the CPU-only torch switch: configured as an explicit uv index
+(`https://download.pytorch.org/whl/cpu`), but the build environment cannot download the wheels
+yet — the index redirects files to `download-r2.pytorch.org`, which the network policy denies.
+Until that host is allowed the lockfile still resolves the PyPI torch wheel (CUDA libraries
+installed but unused: there is no GPU, everything runs on CPU, so benchmark numbers are
+representative of CPU-only torch).

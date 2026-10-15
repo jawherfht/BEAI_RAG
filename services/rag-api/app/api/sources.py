@@ -24,7 +24,7 @@ from beai_rag_core.db.models import KnowledgeBase, Source
 from beai_rag_core.embedding.factory import embed_model_tag
 from beai_rag_core.enums import JobKind, SourceStatus, SourceType
 from beai_rag_core.queue import IngestJob
-from beai_rag_core.storage import source_object_key
+from beai_rag_core.storage import parsed_cache_key, source_object_key
 from beai_rag_core.tenancy import TenantScope
 
 router = APIRouter(prefix="/v1/agents/{agent_id}/sources", tags=["sources"])
@@ -181,6 +181,7 @@ async def put_business_info(
     source.status = SourceStatus.QUEUED
     source.error = None
     await resources.storage.put(source.object_key, data, "application/json")
+    await resources.storage.delete(parsed_cache_key(scope, source.id))  # content changed
     await session.flush()
     job = add_job(session, source, JobKind.INDEX)
     await commit_and_enqueue(resources, session, scope, [job])
