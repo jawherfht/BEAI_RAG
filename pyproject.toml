@@ -7,12 +7,27 @@ dependencies = ["beai-rag-core", "beai-rag-api", "beai-ingestion-worker", "beai-
 
 [tool.uv]
 package = false
+# Only resolve for the platforms we build on (avoids fetching wheels for s390x etc.).
+environments = [
+  "sys_platform == 'linux' and platform_machine == 'x86_64'",
+  "sys_platform == 'linux' and platform_machine == 'aarch64'",
+  "sys_platform == 'darwin'",
+]
 
 [tool.uv.sources]
 beai-rag-core = { workspace = true }
 beai-rag-api = { workspace = true }
 beai-ingestion-worker = { workspace = true }
 beai-embed-server = { workspace = true }
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }
+
+# CPU-only torch (product decision 2026-10-15: no NVIDIA CUDA wheels). Used by Docling in the
+# ingestion worker and by the CPU embed-server.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [tool.uv.workspace]
 members = ["packages/beai_rag_core", "services/rag-api", "services/ingestion-worker", "services/embed-server"]

@@ -24,9 +24,19 @@ For the fallback model, set it to the Qwen3-Embedding wording (`...\nQuery:{text
 - Docling downloads its layout/table models (and EasyOCR models when OCR is used) from Hugging
   Face on first use, or reads them from `DOCLING_ARTIFACTS_PATH`.
 
-## TEI support
-TEI supports the Qwen3 architecture with last-token pooling (the same as Qwen3-Embedding).
-Not exercised here: the build environment cannot pull images from ghcr.io (blob host blocked),
-so the acceptance run uses `services/embed-server` (sentence-transformers, identical model and
-`/embed` contract). TEI remains the production choice; verify with `docker compose --profile
-gpu up tei` on the GPU pool.
+## TEI support (tested 2026-10-15)
+`ghcr.io/huggingface/text-embeddings-inference:cpu-1.8.3` serves harrier with the Candle
+**Qwen3** backend. Findings:
+- TEI does not read harrier's sentence-transformers pooling config ("Could not find a Sentence
+  Transformers config"), so `--pooling last-token` must be passed explicitly.
+- harrier's 32,768-token max length exceeds TEI's default batch budget: pass `--auto-truncate`
+  and a `--max-batch-tokens` that fits memory (16,384 on GPU; 4,096 on CPU — a 16k warm-up tried
+  to allocate 16 GB and crashed). Chunks are ≤ ~1,000 tokens, so truncation never bites.
+- Vectors match sentence-transformers: cosine 0.998–1.002 on English, French and Arabic texts;
+  unit-normalised; identical ranking. CPU speed ≈ 5.5 s per 500-token chunk (4 vCPU).
+- Phase 2 acceptance passes with `EMBED_PROVIDER=tei` (30.6 s for returns-policy.pdf).
+- In this sandbox containers cannot resolve hosts, so the model was downloaded on the host and
+  mounted read-only (`HF_HUB_OFFLINE=1`, `--model-id /model`) — also the recommended offline
+  production layout (pre-fetched weights in the model cache volume).
+
+GPU throughput still has to be measured on the GPU pool (see the benchmark report).

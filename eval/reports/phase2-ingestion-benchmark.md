@@ -6,6 +6,12 @@ Docling 2.139 (CPU torch) · embedder `microsoft/harrier-oss-v1-0.6b@f9b9dc8` vi
 
 Target (spec section 12): **50-page PDF, upload → ready ≤ 2 min.**
 
+> **Decision (product owner, 2026-10-15):** the target is accepted as met **on the planned GPU
+> embedding pool**; no extra CPU-only scaling is built for now. **It must be confirmed with a
+> real GPU benchmark (TEI on the GPU pool, production worker size) before production.**
+> Re-run: `make phase2-check PDF=eval/datasets/bench/handbook-50p.pdf` with `EMBED_URL` pointing
+> at the GPU TEI, and record the result here.
+
 ## Results
 
 | Document | Pages | Chunks | Parse (Docling) | Chunk | Embed | Upsert | **Total** | Target |
@@ -41,4 +47,6 @@ Proposed fixes, in order of effect:
 - Optional: TableFormer FAST mode (−7 %), and/or parallel page batches across workers for
   very large PDFs.
 
-TEI itself could not be measured here: the container cannot pull images from ghcr.io.
+TEI on CPU was tested afterwards (`cpu-1.8.3`): same vectors as sentence-transformers and the
+same CPU speed (≈ 5.5 s per 500-token chunk), so the CPU numbers above hold for TEI too.
+Docling numbers were re-confirmed with CPU-only torch (`2.14.1+cpu`).

@@ -111,9 +111,11 @@ services:
   # Embedding server (Text Embeddings Inference). Whether TEI serves the chosen model is
   # verified in docs/decisions/0001-models.md; if not, EMBED_PROVIDER=vllm is the fallback.
   tei:
-    image: ghcr.io/huggingface/text-embeddings-inference:1.8
+    image: ghcr.io/huggingface/text-embeddings-inference:1.8.3
     profiles: ["gpu"]
-    command: ["--model-id", "${EMBED_MODEL:-microsoft/harrier-oss-v1-0.6b}", "--revision", "${EMBED_MODEL_REVISION:-main}"]
+    # --pooling: TEI cannot read harrier's sentence-transformers config, so set it explicitly.
+    command: ["--model-id", "${EMBED_MODEL:-microsoft/harrier-oss-v1-0.6b}", "--revision", "${EMBED_MODEL_REVISION:-f9b9dc8d367d443f2479d27aa5d8d2850c0774ee}",
+              "--pooling", "last-token", "--auto-truncate", "--max-batch-tokens", "16384"]
     ports: ["8080:80"]
     volumes: [model_cache:/data]
     deploy:
@@ -122,9 +124,11 @@ services:
           devices: [{driver: nvidia, count: 1, capabilities: [gpu]}]
 
   tei-cpu:
-    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.8
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.8.3
     profiles: ["cpu-models"]
-    command: ["--model-id", "${EMBED_MODEL:-microsoft/harrier-oss-v1-0.6b}", "--revision", "${EMBED_MODEL_REVISION:-main}"]
+    # CPU: keep the batch budget small (a 16k-token warm-up needs ~16 GB RAM on CPU).
+    command: ["--model-id", "${EMBED_MODEL:-microsoft/harrier-oss-v1-0.6b}", "--revision", "${EMBED_MODEL_REVISION:-f9b9dc8d367d443f2479d27aa5d8d2850c0774ee}",
+              "--pooling", "last-token", "--auto-truncate", "--max-batch-tokens", "4096"]
     ports: ["8080:80"]
     volumes: [model_cache:/data]
 

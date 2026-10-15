@@ -11,9 +11,13 @@ dependencies = [
   "lingua-language-detector>=2.0",
   "httpx>=0.28",
   "lxml>=5.3",
+  "torch>=2.4",
+  "torchvision>=0.19",
 ]
 
 [tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+torchvision = { index = "pytorch-cpu" }
 beai-rag-core = { workspace = true }
 
 [build-system]
