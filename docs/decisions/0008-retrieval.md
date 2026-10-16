@@ -41,3 +41,10 @@ hashed, so no question text or tenant id is stored in key names.
 Measured on the 4-vCPU dev machine: Qdrant search p50 20 ms / p95 29 ms; query embedding on CPU
 p50 0.7 s / p95 1.7 s. The embedding part of the budget (≤ 20 ms) needs the GPU embedding pool
 and must be confirmed there before production, as for the ingestion benchmark.
+
+## Re-ranker results (2026-10-16, CPU dev machine)
+KB #1, 20-question subset: recall@4 **1.000**, MRR@10 0.967 with re-ranking vs 0.98 / 0.948 on
+all 100 questions without it. CPU re-ranking of ~33 passages takes ~36 s per query (p95 40 s), so
+re-ranking is only usable live on the GPU pool (vLLM score task). It stays off by default and
+per agent; if the re-ranker fails or times out (`RERANK_TIMEOUT_S`), retrieval falls back to the
+fused ranking instead of failing.
