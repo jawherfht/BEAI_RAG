@@ -58,6 +58,52 @@ jobs:
       - run: uv sync --frozen
       - run: uv run pytest -m integration
 
+  # Eval subset (spec section 12): 30 questions (10 per KB) through /test with the real models
+  # (CPU embed-server + re-ranker) and the dev LLM; fails if a metric drops > 3 points from
+  # eval/ci/baseline.json. Needs the LLM_API_KEY secret, so it is skipped on fork PRs.
+  eval-subset:
+    needs: [unit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      LLM_BASE_URL: https://api.groq.com/openai/v1
+      LLM_MODEL: qwen/qwen3.8-27b
+      LLM_THINKING_SWITCH: reasoning_effort
+      LLM_TEMPERATURE: "0"  # fewer run-to-run flips on a 30-question set
+      EMBED_PROVIDER: local
+      EMBED_BATCH_SIZE: "8"
+      EMBED_TIMEOUT_S: "600"
+      GRPC_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v4
+        if: env.LLM_API_KEY != ''
+      - uses: astral-sh/setup-uv@v6
+        if: env.LLM_API_KEY != ''
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        if: env.LLM_API_KEY != ''
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ hashFiles('services/embed-server/embed_server/main.py', '.env.example') }}
+      - name: Start infrastructure and the CPU embed-server
+        if: env.LLM_API_KEY != ''
+        run: |
+          make up
+          (make run-embedder > embed-server.log 2>&1 &)
+          for _ in $(seq 1 300); do curl -sf localhost:8080/health && break; sleep 2; done
+      - name: Run 10 questions per KB
+        if: env.LLM_API_KEY != ''
+        working-directory: eval
+        run: for kb in kb1_retail kb2_saas_fr kb3_hr_ar; do uv run python run_eval.py --kb $kb --subset 10; done
+      - name: Compare with the baseline
+        if: env.LLM_API_KEY != ''
+        run: cd eval && uv run python ci_check.py --tag c512-s10
+      - name: Skipped
+        if: env.LLM_API_KEY == ''
+        run: echo "::notice::eval subset skipped (no LLM_API_KEY secret, e.g. fork PR)"
+
   web:
     runs-on: ubuntu-latest
     defaults:

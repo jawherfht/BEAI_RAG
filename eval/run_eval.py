@@ -119,7 +119,7 @@ async def run(args: argparse.Namespace, out: Path, todo: list[dict[str, Any]], n
     folder = ROOT / "eval/datasets" / kb
 
     # Gate off: every question reaches the LLM; gates are replayed offline.
-    settings = Settings(score_threshold=0.0, conf_mid=0.0, conf_high=0.0, rerank_score_threshold=0.0, rerank_conf_mid=0.0, rerank_conf_high=0.0, rerank_timeout_s=600.0)  # fmt: skip
+    settings = Settings(score_threshold=0.0, conf_mid=0.0, conf_high=0.0, rerank_score_threshold=0.0, rerank_conf_mid=0.0, rerank_conf_high=0.0, rerank_timeout_s=600.0, grounding_signal="dense")  # fmt: skip
     async with session(settings=settings) as s:
         kb_settings: dict[str, Any] = {"chunk_size": args.chunk, "rerank_enabled": args.rerank}
         if kb in FALLBACK_MESSAGES:
