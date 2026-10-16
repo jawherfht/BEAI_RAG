@@ -5,7 +5,7 @@ RUN := $(UV) run
 API_DIR := services/rag-api
 INFRA := qdrant postgres redis rabbitmq seaweedfs
 
-.PHONY: help up down logs install migrate bootstrap run-api run-worker run-embedder phase2-check sample-data lint format typecheck test test-unit test-integration readyz show-collection phase1-check seed demo eval licenses openapi
+.PHONY: help up down logs install migrate bootstrap run-api run-worker run-embedder phase2-check eval-retrieval kb1-data sample-data lint format typecheck test test-unit test-integration readyz show-collection phase1-check seed demo eval licenses openapi
 
 help:
 	@grep -E '^[a-z0-9-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-18s %s\n", $$1, $$2}'
@@ -67,6 +67,12 @@ run-embedder: ## CPU embedding server on :8080 (TEI /embed contract; EMBED_PROVI
 
 run-worker: ## Run the ingestion worker locally against the compose stack
 	cd services/ingestion-worker && $(RUN) python -m worker.main
+
+eval-retrieval: ## Phase 3: recall@4, MRR@10 and latency on KB #1 (real models; ARGS=--rerank)
+	$(RUN) python eval/retrieval_eval.py $(ARGS)
+
+kb1-data: ## (Re)generate the KB #1 documents and questions from eval/datasets/kb1_retail/facts.py
+	$(RUN) python eval/datasets/kb1_retail/build.py
 
 sample-data: ## (Re)generate eval/datasets/kb1_retail/returns-policy.pdf
 	$(RUN) python eval/datasets/make_returns_policy_pdf.py

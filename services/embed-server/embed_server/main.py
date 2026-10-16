@@ -75,7 +75,10 @@ class QwenReranker:
 
         self._torch = torch
         self._tok = AutoTokenizer.from_pretrained(model_id, revision=revision, padding_side="left")
-        self._model: Any = AutoModelForCausalLM.from_pretrained(model_id, revision=revision)
+        # float32 on CPU: bf16 matmuls are slow on CPUs without native bf16 support.
+        self._model: Any = AutoModelForCausalLM.from_pretrained(
+            model_id, revision=revision, dtype=torch.float32
+        )
         self._model.eval()  # type: ignore[no-untyped-call]
         self._yes = self._tok.convert_tokens_to_ids("yes")
         self._no = self._tok.convert_tokens_to_ids("no")

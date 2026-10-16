@@ -68,6 +68,23 @@ ingestion-worker  (beai.ingest → ingest.index|reindex|delete|recrawl)
   file_name, url, title, page, page_end, section, chunk_index, text, context_prefix, lang,
   embed_model, kb_version, created_at`.
 
+## Implemented in Phase 3 — retrieval (live path)
+See [ADR 0008](decisions/0008-retrieval.md).
+
+```
+question ─► cache (tenant|agent|kb_version|normalised q) ─hit─► result
+          └► embed query (card prompt) ∥ BM25 query vector
+             ► Qdrant Query API: prefetch dense(50) + sparse(50), tenant+agent filter,
+               agent-scoped IDF, RRF fusion → top_k (or 50 if re-ranking)
+             ► [re-rank with Qwen3-Reranker if enabled and ≥ 10 candidates] → top_k
+             ► grounding: best cosine (or re-rank score) < threshold → fallback, no LLM
+             ► confidence bucket high / medium / low
+```
+
+`app/retrieval/` (retriever, confidence, re-ranker clients), `app/cache/answer_cache.py`,
+`app/services/retrieval.py` (KB settings + cache + retriever, used by `/test`, `/answer` and
+gRPC in Phase 4). `/readyz` now also checks the embedder.
+
 ## Latency rules (all phases)
 Nothing slow on the live path: parsing, crawling, chunking, embedding are async via RabbitMQ.
 Retrieval budget ≤ 60 ms p95; LLM TTFT ≤ 500 ms p95 (spec section 1.4).

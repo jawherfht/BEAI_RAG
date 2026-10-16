@@ -8,6 +8,7 @@ applied inside ``QdrantStore`` from the ``TenantScope``; this module cannot bypa
 from __future__ import annotations
 
 import asyncio
+import logging
 import time
 from dataclasses import asdict, dataclass, field
 from typing import Any
@@ -20,6 +21,7 @@ from beai_rag_core.qdrant_store import QdrantStore, ScoredChunk
 from beai_rag_core.tenancy import TenantScope
 
 SNIPPET_CHARS = 200
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,6 +70,7 @@ class RetrievalResult:
     latency_ms: dict[str, float] = field(default_factory=dict)
     # Ranked top-k before the grounding threshold (evaluation and logging only; not cached).
     candidates: list[RetrievedChunk] = field(default_factory=list)
+    rerank_error: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -155,15 +158,22 @@ class Retriever:
 
         chunks = [_chunk(h) for h in hits]
         reranked = False
-        if rerank and len(chunks) >= self._rerank_min:
+        rerank_error: str | None = None
+        attempted = rerank and len(chunks) >= self._rerank_min
+        if attempted:
             assert self._reranker is not None
-            scores = await self._reranker.rerank(question, [c.text for c in chunks])
-            for c, s in zip(chunks, scores, strict=True):
-                c.rerank_score = s
-                c.score = s
-            chunks.sort(key=lambda c: c.rerank_score or 0.0, reverse=True)
-            reranked = True
-        latency["rerank"] = (time.perf_counter() - t2) * 1000 if reranked else 0.0
+            try:
+                scores = await self._reranker.rerank(question, [c.text for c in chunks])
+            except Exception as exc:  # degrade to the fused ranking, never fail the answer
+                logger.warning("re-ranker failed, using fused ranking: %r", exc)
+                rerank_error = type(exc).__name__
+            else:
+                for c, s in zip(chunks, scores, strict=True):
+                    c.rerank_score = s
+                    c.score = s
+                chunks.sort(key=lambda c: c.rerank_score or 0.0, reverse=True)
+                reranked = True
+        latency["rerank"] = (time.perf_counter() - t2) * 1000 if attempted else 0.0
         chunks = chunks[: settings.top_k]
 
         thresholds = self._rerank_thresholds if reranked else self._dense_thresholds
@@ -181,6 +191,7 @@ class Retriever:
             reranked=reranked,
             latency_ms={k: round(v, 2) for k, v in latency.items()},
             candidates=chunks,
+            rerank_error=rerank_error,
         )
 
 

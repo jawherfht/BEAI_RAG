@@ -142,3 +142,17 @@ async def test_per_kb_threshold_override(setup) -> None:  # type: ignore[no-unty
         scope, "returns accepted within 30 days receipt", RetrievalSettings(), score_threshold=0.999
     )
     assert r.fallback
+
+
+class BrokenReranker(FakeReranker):
+    async def rerank(self, query: str, documents: Sequence[str]) -> list[float]:
+        raise TimeoutError("re-ranker too slow")
+
+
+async def test_reranker_failure_degrades_to_fused_ranking(setup) -> None:  # type: ignore[no-untyped-def]
+    store, scope, dense = setup
+    r = await retriever(store, dense, BrokenReranker()).retrieve(
+        scope, "returns accepted within 30 days receipt", RetrievalSettings(rerank_enabled=True)
+    )
+    assert not r.reranked and r.rerank_error == "TimeoutError"
+    assert not r.fallback and "30 days" in r.chunks[0].text  # dense thresholds applied

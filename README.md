@@ -11,7 +11,7 @@ for contributors and agents are in [`CLAUDE.md`](CLAUDE.md).
 |---|---|---|
 | 1 Foundations | skeleton, compose, config, auth, DB + migrations, Qdrant collection, health, CI | **done** |
 | 2 Ingestion | upload/URL/business-info, worker, parse → chunk → embed → upsert | **done — acceptance PASS with real models; 50-page CPU benchmark over budget, see [report](eval/reports/phase2-ingestion-benchmark.md)** |
-| 3 Retrieval | hybrid search, tenant filter, re-ranker, confidence, cache | not started |
+| 3 Retrieval | hybrid search, tenant filter, re-ranker, confidence, cache | **done — recall@4 0.98, MRR@10 0.948 on KB #1; isolation suite green; search p95 29 ms (embedding latency needs the GPU pool)** |
 | 4 Generation | prompt, LLM streaming, citations, SSE/WS, gRPC | not started |
 | 5 Screen B UI | Next.js page + status chip | not started |
 | 6 Evaluation | datasets, calibration, reports | not started |
@@ -29,6 +29,8 @@ Requirements: Docker with Compose v2, [uv](https://docs.astral.sh/uv/), GNU make
 5. `make run-embedder` (CPU embedding server, `EMBED_PROVIDER=local`, `EMBED_URL=http://localhost:8080`)
    and `make run-worker` — the ingestion worker (models download from Hugging Face on first use)
 6. `make phase1-check` / `make phase2-check` — acceptance checks of each phase
+
+Evaluation: `make eval-retrieval` (KB #1 recall@4 / MRR@10 / latency; add `ARGS=--rerank`).
 
 Other targets: `make lint`, `make typecheck`, `make show-collection`, `make openapi`,
 `make sample-data`, `make licenses`, `make down`.

@@ -20,7 +20,7 @@ Codes in use: `unauthorized` (401), `not_found` (404), `conflict` (409),
 | Method & path | Response |
 |---|---|
 | `GET /healthz` | `200 {"status": "ok"}` — process is alive |
-| `GET /readyz` | `200` or `503` `{"status": "ok"\|"unavailable", "checks": {"qdrant"\|"postgres"\|"redis"\|"rabbitmq"\|"object_storage": {"ok": bool, "latency_ms": float, "error"?: str}}}` |
+| `GET /readyz` | `200` or `503` `{"status": "ok"\|"unavailable", "checks": {"embedder"\|"qdrant"\|"postgres"\|"redis"\|"rabbitmq"\|"object_storage"[\|"reranker"]: {"ok": bool, "latency_ms": float, "error"?: str}}}` (`reranker` when `READINESS_CHECK_RERANKER=true`) |
 | `GET /metrics` | Prometheus text format |
 
 ## Knowledge base (Phase 2)
