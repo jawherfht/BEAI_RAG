@@ -23,7 +23,7 @@ Docling-only measurements on the same machine (models already loaded):
 
 | Docling setting | 50 pages |
 |---|---|
-| layout + tables (ACCURATE), OCR on | 98–109 s |
+| layout + tables (ACCURATE), OCR on | 98–109 s (PyPI torch) · 106–118 s (CPU-only torch) |
 | layout + tables, OCR off | 97–100 s |
 | layout + tables (FAST) | 91 s |
 | layout only (no table structure) | 65 s |
@@ -49,4 +49,6 @@ Proposed fixes, in order of effect:
 
 TEI on CPU was tested afterwards (`cpu-1.8.3`): same vectors as sentence-transformers and the
 same CPU speed (≈ 5.5 s per 500-token chunk), so the CPU numbers above hold for TEI too.
-Docling numbers were re-confirmed with CPU-only torch (`2.14.1+cpu`).
+Docling re-measured with CPU-only torch (`2.14.1+cpu`, 2026-10-16, fresh container): 50-page
+parse **106–118 s** (2 runs) vs 98–109 s with the PyPI torch build — within run-to-run noise to
+≈ 8 % slower. Conclusions unchanged.
