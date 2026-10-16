@@ -1,0 +1,66 @@
+# Eval subset (spec section 12): 30 questions (10 per KB) through /test with the real models
+# (CPU embed-server + re-ranker) and the dev LLM; fails if a metric drops > 3 points from
+# eval/ci/baseline.json. Called by ci.yml on every PR / main push; workflow_dispatch runs it alone.
+# Needs the LLM_API_KEY repository secret, so it is skipped where secrets are absent (fork PRs).
+name: eval-subset
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  eval-subset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      LLM_BASE_URL: https://api.groq.com/openai/v1
+      LLM_MODEL: qwen/qwen3.8-27b
+      LLM_THINKING_SWITCH: reasoning_effort
+      LLM_TEMPERATURE: "0"  # fewer run-to-run flips on a 30-question set
+      EMBED_PROVIDER: local
+      EMBED_BATCH_SIZE: "8"
+      EMBED_TIMEOUT_S: "600"
+      GRPC_ENABLED: "false"
+    steps:
+      - name: Skipped
+        if: env.LLM_API_KEY == ''
+        run: echo "::notice::eval subset skipped (no LLM_API_KEY secret, e.g. fork PR)"
+      - uses: actions/checkout@v4
+        if: env.LLM_API_KEY != ''
+      - uses: astral-sh/setup-uv@v6
+        if: env.LLM_API_KEY != ''
+        with:
+          python-version: "3.12"
+      - uses: actions/cache@v4
+        if: env.LLM_API_KEY != ''
+        with:
+          path: ~/.cache/huggingface
+          key: hf-${{ hashFiles('.env.example', 'services/embed-server/embed_server/main.py') }}
+      - name: Start infrastructure and the CPU embed-server
+        if: env.LLM_API_KEY != ''
+        run: |
+          make up
+          (make run-embedder > embed-server.log 2>&1 &)
+          for _ in $(seq 1 450); do curl -sf localhost:8080/health && break; sleep 2; done
+          curl -sf localhost:8080/health || { tail -50 embed-server.log; exit 1; }
+      - name: Run 10 questions per KB
+        if: env.LLM_API_KEY != ''
+        working-directory: eval
+        run: for kb in kb1_retail kb2_saas_fr kb3_hr_ar; do uv run python run_eval.py --kb $kb --subset 10 || exit 1; done
+      - name: Compare with the baseline
+        if: env.LLM_API_KEY != ''
+        working-directory: eval
+        run: uv run python ci_check.py --tag c512-s10
+      - name: Upload the run rows
+        if: always() && env.LLM_API_KEY != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-subset-rows
+          path: |
+            eval/runs/*.c512-s10.jsonl
+            embed-server.log
+          if-no-files-found: ignore
