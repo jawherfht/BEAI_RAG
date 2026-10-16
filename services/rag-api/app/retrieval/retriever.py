@@ -71,6 +71,7 @@ class RetrievalResult:
     # Ranked top-k before the grounding threshold (evaluation and logging only; not cached).
     candidates: list[RetrievedChunk] = field(default_factory=list)
     rerank_error: str | None = None
+    rerank_checked: bool = False  # the re-ranker scored the final chunks as the grounding gate
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -79,6 +80,7 @@ class RetrievalResult:
             "confidence": self.confidence.value,
             "fallback": self.fallback,
             "reranked": self.reranked,
+            "rerank_checked": self.rerank_checked,
             "latency_ms": self.latency_ms,
         }
 
@@ -91,6 +93,7 @@ class RetrievalResult:
             fallback=data["fallback"],
             reranked=data["reranked"],
             latency_ms=dict(data.get("latency_ms") or {}),
+            rerank_checked=bool(data.get("rerank_checked", False)),
         )
 
 
@@ -108,6 +111,7 @@ class Retriever:
         rerank_candidates: int = 50,
         rerank_min_candidates: int = 10,
         hnsw_ef: int = 128,
+        grounding_signal: str = "dense",
     ) -> None:
         self._store = store
         self._dense = dense
@@ -119,6 +123,7 @@ class Retriever:
         self._rerank_candidates = rerank_candidates
         self._rerank_min = rerank_min_candidates
         self._hnsw_ef = hnsw_ef
+        self._rerank_gate = grounding_signal == "rerank" and reranker is not None
 
     async def retrieve(
         self,
@@ -173,11 +178,19 @@ class Retriever:
                     c.score = s
                 chunks.sort(key=lambda c: c.rerank_score or 0.0, reverse=True)
                 reranked = True
-        latency["rerank"] = (time.perf_counter() - t2) * 1000 if attempted else 0.0
         chunks = chunks[: settings.top_k]
+        checked = False
+        if self._rerank_gate and not reranked and chunks:
+            # Grounding check: the re-ranker judges the final top_k only (4 passages, not 50).
+            attempted = True
+            checked = await self._rerank_check(question, chunks)
+            if not checked:
+                rerank_error = "check_failed"
+        latency["rerank"] = (time.perf_counter() - t2) * 1000 if attempted else 0.0
 
-        thresholds = self._rerank_thresholds if reranked else self._dense_thresholds
-        if not reranked and score_threshold is not None:
+        use_rerank = reranked or checked
+        thresholds = self._rerank_thresholds if use_rerank else self._dense_thresholds
+        if not use_rerank and score_threshold is not None:
             mid = max(score_threshold, thresholds.conf_mid)
             thresholds = Thresholds(score_threshold, mid, max(mid, thresholds.conf_high))
         top_score = max((c.score for c in chunks), default=None)
@@ -192,7 +205,21 @@ class Retriever:
             latency_ms={k: round(v, 2) for k, v in latency.items()},
             candidates=chunks,
             rerank_error=rerank_error,
+            rerank_checked=checked,
         )
+
+    async def _rerank_check(self, question: str, chunks: list[RetrievedChunk]) -> bool:
+        assert self._reranker is not None
+        try:
+            scores = await self._reranker.rerank(question, [c.text for c in chunks])
+        except Exception as exc:  # degrade to the dense gate, never fail the answer
+            logger.warning("re-ranker grounding check failed, using the dense gate: %r", exc)
+            return False
+        for c, s in zip(chunks, scores, strict=True):
+            c.rerank_score = s
+            c.score = s
+        chunks.sort(key=lambda c: c.rerank_score or 0.0, reverse=True)
+        return True
 
 
 def _chunk(hit: ScoredChunk) -> RetrievedChunk:

@@ -73,7 +73,10 @@ def write_doc(folder: Path, doc: str, title: str, facts: list[Any], rtl: bool) -
         d.save(str(path))
     elif suffix == ".md":
         parts = [f"# {title}\n"]
-        parts += [f"## {s}\n\n" + " ".join(f.sentence for f in items) + "\n" for (_, s), items in groups.items()]
+        parts += [
+            f"## {s}\n\n" + " ".join(f.sentence for f in items) + "\n"
+            for (_, s), items in groups.items()
+        ]
         path.write_text("\n".join(parts), encoding="utf-8")
     elif suffix == ".html":
         body = "".join(
@@ -82,7 +85,7 @@ def write_doc(folder: Path, doc: str, title: str, facts: list[Any], rtl: bool) -
         )
         lang = ' lang="ar" dir="rtl"' if rtl else ""
         path.write_text(
-            f"<!DOCTYPE html>\n<html{lang}><head><meta charset=\"utf-8\"><title>{html.escape(title)}</title></head>"
+            f'<!DOCTYPE html>\n<html{lang}><head><meta charset="utf-8"><title>{html.escape(title)}</title></head>'
             f"<body><main><h1>{html.escape(title)}</h1>\n{body}</main></body></html>\n",
             encoding="utf-8",
         )
@@ -120,18 +123,42 @@ def build(kb: str, questions_only: bool = False) -> None:
     prefix = getattr(m, "PREFIX", kb.split("_")[0])
     rows: list[dict[str, Any]] = []
     for i, f in enumerate(m.FACTS, start=1):
-        rows.append({"id": f"{prefix}-a{i:03d}", "type": "answerable", "question": f.question,
-                     "gold": [{"file_name": f.doc, "page": f.page}], "evidence": [f.evidence],
-                     "answer": f.sentence})
+        rows.append(
+            {
+                "id": f"{prefix}-a{i:03d}",
+                "type": "answerable",
+                "question": f.question,
+                "gold": [{"file_name": f.doc, "page": f.page}],
+                "evidence": [f.evidence],
+                "answer": f.sentence,
+            }
+        )
     for i, q in enumerate(m.UNANSWERABLE, start=1):
-        rows.append({"id": f"{prefix}-u{i:03d}", "type": "unanswerable", "question": q, "gold": [], "evidence": []})
+        rows.append(
+            {
+                "id": f"{prefix}-u{i:03d}",
+                "type": "unanswerable",
+                "question": q,
+                "gold": [],
+                "evidence": [],
+            }
+        )
     for i, t in enumerate(getattr(m, "TRICKY", []), start=1):
-        rows.append({"id": f"{prefix}-t{i:03d}", "type": "tricky", "question": t.question,
-                     "gold": [{"file_name": d, "page": p} for d, p in t.gold], "evidence": list(t.evidence)})
+        rows.append(
+            {
+                "id": f"{prefix}-t{i:03d}",
+                "type": "tricky",
+                "question": t.question,
+                "gold": [{"file_name": d, "page": p} for d, p in t.gold],
+                "evidence": list(t.evidence),
+            }
+        )
     with (folder / "questions.jsonl").open("w", encoding="utf-8") as out:
         for row in rows:
             out.write(json.dumps(row, ensure_ascii=False) + "\n")
-    counts = {k: sum(r["type"] == k for r in rows) for k in ("answerable", "unanswerable", "tricky")}
+    counts = {
+        k: sum(r["type"] == k for r in rows) for k in ("answerable", "unanswerable", "tricky")
+    }
     print(f"{kb}: {len(m.TITLES)} documents, questions {counts}")
 
 

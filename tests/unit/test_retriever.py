@@ -68,6 +68,7 @@ def retriever(
     dense: HashingEmbedder,
     reranker: FakeReranker | None = None,
     min_candidates: int = 10,
+    grounding_signal: str = "dense",
 ) -> Retriever:
     return Retriever(
         store=store,
@@ -77,6 +78,7 @@ def retriever(
         dense_thresholds=Thresholds(0.30, 0.45, 0.60),
         rerank_thresholds=Thresholds(0.3, 0.5, 0.8),
         rerank_min_candidates=min_candidates,
+        grounding_signal=grounding_signal,
     )
 
 
@@ -156,3 +158,44 @@ async def test_reranker_failure_degrades_to_fused_ranking(setup) -> None:  # typ
     )
     assert not r.reranked and r.rerank_error == "TimeoutError"
     assert not r.fallback and "30 days" in r.chunks[0].text  # dense thresholds applied
+
+
+async def test_rerank_grounding_check_scores_only_the_top_k(setup) -> None:  # type: ignore[no-untyped-def]
+    store, scope, dense = setup
+    rr = FakeReranker()
+    r = await retriever(store, dense, rr, grounding_signal="rerank").retrieve(
+        scope, "returns accepted within 30 days receipt", RetrievalSettings(top_k=4)
+    )
+    # The dense gate would pass this question, but no top-4 passage is relevant per the
+    # re-ranker (the fake only likes "Gift cards"): fallback, LLM not called.
+    assert rr.calls == 1 and r.rerank_checked and not r.reranked
+    assert r.fallback and r.chunks == [] and r.top_score == 0.01
+    assert len(r.candidates) == 4 and r.latency_ms["rerank"] > 0
+
+
+async def test_rerank_grounding_check_passes_and_reorders(setup) -> None:  # type: ignore[no-untyped-def]
+    store, scope, dense = setup
+    r = await retriever(store, dense, FakeReranker(), grounding_signal="rerank").retrieve(
+        scope, "gift cards valid years", RetrievalSettings(top_k=4)
+    )
+    assert not r.fallback and r.rerank_checked
+    assert "Gift cards" in r.chunks[0].text and r.top_score == 0.95
+    assert r.confidence is Confidence.HIGH
+
+
+async def test_rerank_grounding_check_failure_uses_dense_gate(setup) -> None:  # type: ignore[no-untyped-def]
+    store, scope, dense = setup
+    r = await retriever(store, dense, BrokenReranker(), grounding_signal="rerank").retrieve(
+        scope, "returns accepted within 30 days receipt", RetrievalSettings(top_k=4)
+    )
+    assert not r.rerank_checked and r.rerank_error == "check_failed"
+    assert not r.fallback and "30 days" in r.chunks[0].text
+
+
+async def test_full_rerank_is_not_checked_twice(setup) -> None:  # type: ignore[no-untyped-def]
+    store, scope, dense = setup
+    rr = FakeReranker()
+    r = await retriever(store, dense, rr, grounding_signal="rerank").retrieve(
+        scope, "returns within 30 days", RetrievalSettings(rerank_enabled=True)
+    )
+    assert rr.calls == 1 and r.reranked and not r.rerank_checked

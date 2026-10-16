@@ -89,7 +89,9 @@ async def run_checks(
     r: Resources, checks: dict[str, Check] | None = None
 ) -> dict[str, CheckResult]:
     selected = checks if checks is not None else dict(CHECKS)
-    if checks is None and r.settings.readiness_check_reranker:
+    if checks is None and (
+        r.settings.readiness_check_reranker or r.settings.grounding_signal == "rerank"
+    ):
         selected["reranker"] = check_reranker
     if checks is None and r.settings.readiness_check_llm:
         selected["llm"] = check_llm

@@ -158,7 +158,7 @@ class AnswerService:
                 yield ev
             if done is not None and cache_q is not None:
                 await self._cache(scope, knowledge, cache_q, done)
-            self._after(scope, req, done, result.reranked)
+            self._after(scope, req, done, result.reranked or result.rerank_checked)
             return
 
         prompt = build_prompt(
@@ -232,7 +232,7 @@ class AnswerService:
         yield done
         if cache_q is not None:
             await self._cache(scope, knowledge, cache_q, done)
-        self._after(scope, req, done, result.reranked)
+        self._after(scope, req, done, result.reranked or result.rerank_checked)
 
     async def _fallback(
         self,

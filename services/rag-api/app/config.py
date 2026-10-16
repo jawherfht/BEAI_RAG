@@ -10,6 +10,15 @@ from pydantic_settings import NoDecode
 
 from beai_rag_core.settings import CoreSettings
 
+_THRESHOLD_KEYS = (
+    "score_threshold",
+    "conf_mid",
+    "conf_high",
+    "rerank_score_threshold",
+    "rerank_conf_mid",
+    "rerank_conf_high",
+)
+
 
 class Settings(CoreSettings):
     app_name: str = "beai-rag-api"
@@ -46,6 +55,11 @@ class Settings(CoreSettings):
     rerank_score_threshold: float = Field(default=0.30, ge=0.0, le=1.0)
     rerank_conf_mid: float = Field(default=0.50, ge=0.0, le=1.0)
     rerank_conf_high: float = Field(default=0.80, ge=0.0, le=1.0)
+    # Grounding signal for the fallback gate (spec 6, step 5). "dense": best dense cosine of the
+    # final chunks (or the re-ranker score when full re-ranking ran). "rerank": additionally,
+    # when full re-ranking did not run, the re-ranker scores the final top_k chunks and its best
+    # P(yes) is the gate ("top-4 check", Phase 6 / ADR 0011). Falls back to dense on errors.
+    grounding_signal: Literal["dense", "rerank"] = "dense"
 
     llm_max_input_tokens: int = Field(default=2500, gt=200)  # prompt budget (TTFT)
     readiness_check_llm: bool = True
@@ -94,9 +108,11 @@ class Settings(CoreSettings):
         data = json.loads(path.read_text())
         if data.get("embed_model") not in (None, self.embed_model):
             return self  # calibrated for another model: ignore
-        for key in ("score_threshold", "conf_mid", "conf_high"):
+        for key in _THRESHOLD_KEYS:
             if key not in self.model_fields_set and key in data:
                 object.__setattr__(self, key, float(data[key]))
+        if "grounding_signal" not in self.model_fields_set and "grounding_signal" in data:
+            object.__setattr__(self, "grounding_signal", str(data["grounding_signal"]))
         object.__setattr__(self, "thresholds_source", str(path))
         return self
 
@@ -106,6 +122,10 @@ class Settings(CoreSettings):
             raise ValueError("thresholds must satisfy SCORE_THRESHOLD <= CONF_MID <= CONF_HIGH")
         if not self.rerank_score_threshold <= self.rerank_conf_mid <= self.rerank_conf_high:
             raise ValueError("re-ranker thresholds must be ordered like the dense ones")
+        if self.grounding_signal not in ("dense", "rerank"):
+            raise ValueError("GROUNDING_SIGNAL must be 'dense' or 'rerank'")
+        if self.grounding_signal == "rerank" and self.rerank_provider == "none":
+            raise ValueError("GROUNDING_SIGNAL=rerank needs a re-ranker (RERANK_PROVIDER)")
         if self.environment == "prod" and self.jwt_secret is not None:
             raise ValueError("JWT_SECRET (HS256) is for dev/test only; use JWT_PUBLIC_KEY in prod")
         if any(a.startswith("HS") for a in self.jwt_algorithms):

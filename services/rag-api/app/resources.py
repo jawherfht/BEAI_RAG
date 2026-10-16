@@ -112,6 +112,7 @@ class Resources:
             rerank_candidates=settings.rerank_candidates,
             rerank_min_candidates=settings.rerank_min_candidates,
             hnsw_ef=settings.search_hnsw_ef,
+            grounding_signal=settings.grounding_signal,
         )
         return cls(
             settings=settings,

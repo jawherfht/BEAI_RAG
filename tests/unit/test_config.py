@@ -80,6 +80,31 @@ def test_calibrated_thresholds_file_applies_unless_env_overrides(tmp_path, monke
     assert other_model.thresholds_source == "defaults"
 
 
+def test_thresholds_file_can_select_the_rerank_grounding_signal(tmp_path) -> None:  # type: ignore[no-untyped-def]
+    import json
+
+    f = tmp_path / "thresholds.json"
+    f.write_text(
+        json.dumps(
+            {
+                "embed_model": "microsoft/harrier-oss-v1-0.6b",
+                "grounding_signal": "rerank",
+                "rerank_score_threshold": 0.2,
+                "rerank_conf_mid": 0.6,
+                "rerank_conf_high": 0.9,
+            }
+        )
+    )
+    s = make_settings(thresholds_file=str(f), rerank_provider="local")
+    assert s.grounding_signal == "rerank"
+    assert (s.rerank_score_threshold, s.rerank_conf_mid, s.rerank_conf_high) == (0.2, 0.6, 0.9)
+    assert (
+        make_settings(thresholds_file=str(f), grounding_signal="dense").grounding_signal == "dense"
+    )
+    with pytest.raises(ValidationError, match="GROUNDING_SIGNAL"):
+        make_settings(thresholds_file=str(f), rerank_provider="none")
+
+
 def test_short_hs256_secret_rejected() -> None:
     with pytest.raises(ValidationError, match="32 bytes"):
         make_settings(jwt_secret="too-short")

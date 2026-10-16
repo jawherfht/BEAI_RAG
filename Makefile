@@ -5,7 +5,7 @@ RUN := $(UV) run
 API_DIR := services/rag-api
 INFRA := qdrant postgres redis rabbitmq seaweedfs
 
-.PHONY: help up down logs install migrate bootstrap run-api run-worker run-embedder phase2-check phase4-check calibrate eval-retrieval kb1-data sample-data lint format typecheck test test-unit test-integration readyz show-collection phase1-check seed demo eval licenses openapi proto web-install web-check e2e stack-stop
+.PHONY: help up down logs install migrate bootstrap run-api run-worker run-embedder phase2-check phase4-check calibrate eval-retrieval kb-data faithfulness sample-data lint format typecheck test test-unit test-integration readyz show-collection phase1-check seed demo eval licenses openapi proto web-install web-check e2e stack-stop
 
 help:
 	@grep -E '^[a-z0-9-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-18s %s\n", $$1, $$2}'
@@ -68,17 +68,17 @@ run-embedder: ## CPU embedding server on :8080 (TEI /embed contract; EMBED_PROVI
 phase4-check: ## Phase 4 acceptance: /test sample question, fallback without LLM, TTFT
 	$(RUN) python scripts/phase4_check.py
 
-calibrate: ## Calibrate grounding thresholds on KB #1 -> config/thresholds.<model>.json
-	$(RUN) python eval/calibrate.py
+calibrate: ## Calibrate grounding thresholds from eval/runs (all KBs) -> config/thresholds.<model>.json
+	$(RUN) python eval/calibrate.py --tag $(EVAL_TAG)
 
 run-worker: ## Run the ingestion worker locally against the compose stack
 	cd services/ingestion-worker && $(RUN) python -m worker.main
 
-eval-retrieval: ## Phase 3: recall@4, MRR@10 and latency on KB #1 (real models; ARGS=--rerank)
+eval-retrieval: ## Retrieval only: recall@4, MRR@10, latency (ARGS="--kb kb2_saas_fr --rerank")
 	$(RUN) python eval/retrieval_eval.py $(ARGS)
 
-kb1-data: ## (Re)generate the KB #1 documents and questions from eval/datasets/kb1_retail/facts.py
-	$(RUN) python eval/datasets/kb1_retail/build.py
+kb-data: ## (Re)generate the three eval KBs (documents + questions) from their facts.py
+	for kb in $(EVAL_KBS); do $(RUN) python eval/datasets/build_kb.py $$kb || exit 1; done
 
 sample-data: ## (Re)generate eval/datasets/kb1_retail/returns-policy.pdf
 	$(RUN) python eval/datasets/make_returns_policy_pdf.py
@@ -86,7 +86,24 @@ sample-data: ## (Re)generate eval/datasets/kb1_retail/returns-policy.pdf
 licenses: ## Python dependency licence report
 	$(RUN) pip-licenses --from=mixed --format=markdown --order=license
 
-seed demo eval:
+# Phase 6 evaluation (spec section 12). Comparison mode: make eval CHUNK=256 RERANK=on SUBSET=60
+# LABEL=qwen3emb (other models: set EMBED_MODEL / LLM_MODEL etc. in the environment as well).
+EVAL_KBS := kb1_retail kb2_saas_fr kb3_hr_ar
+CHUNK ?= 512
+RERANK ?= off
+SUBSET ?= 0
+LABEL ?=
+EVAL_TAG := c$(CHUNK)$(if $(filter on,$(RERANK)),-rerank,)$(if $(filter-out 0,$(SUBSET)),-s$(SUBSET),)$(if $(LABEL),-$(LABEL),)
+eval: ## Run the KBs through /test (one LLM call per question), then write eval/reports/phase6-eval.md
+	cd eval && for kb in $(EVAL_KBS); do \
+		$(RUN) python run_eval.py --kb $$kb --chunk $(CHUNK) --subset $(SUBSET) $(if $(filter on,$(RERANK)),--rerank,) $(if $(LABEL),--label $(LABEL),) || exit 1; \
+	done
+	cd eval && $(RUN) python report.py --tag $(EVAL_TAG)
+
+faithfulness: ## RAGAS faithfulness on a stratified subset of answered questions (LLM judge)
+	$(UV) run --script eval/faithfulness.py --tag $(EVAL_TAG) $(ARGS)
+
+seed demo:
 	@echo "'$@' is implemented in a later phase (see BEAI_RAG_BUILD_SPEC.md section 15)"; exit 1
 
 openapi: ## Regenerate docs/openapi.json

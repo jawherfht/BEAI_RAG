@@ -1,8 +1,8 @@
-"""Phase 3 retrieval evaluation on KB #1: recall@4, MRR@10, retrieval latency.
+"""Retrieval-only evaluation: recall@4, MRR@10, retrieval latency (no LLM calls).
 
-    uv run python eval/retrieval_eval.py [--rerank] [--no-hybrid] [--chunk 512]
+    uv run python eval/retrieval_eval.py [--kb kb1_retail] [--rerank] [--no-hybrid] [--chunk 512]
 
-Ingests KB #1 for a fresh tenant with the real models, then for every answerable question
+Ingests the KB for a fresh tenant with the real models, then for every answerable question
 retrieves the top 10 (no answer cache) and checks where the gold evidence first appears.
 A question counts as found at rank r if the r-th chunk contains its evidence phrase.
 Writes a Markdown report to eval/reports/.
@@ -14,31 +14,22 @@ import argparse
 import asyncio
 import json
 import time
-import unicodedata
 from dataclasses import replace
 
 from harness import ROOT, percentile, session  # type: ignore[import-not-found]
+from text_match import norm  # type: ignore[import-not-found]
 
 from app.retrieval.retriever import RetrievalSettings
 
-KB1 = ROOT / "eval/datasets/kb1_retail"
-DOCS = [
-    "returns-policy.pdf",
-    "shipping-guide.pdf",
-    "product-care.docx",
-    "store-faq.md",
-    "warranty.txt",
-]
-
-
-def norm(text: str) -> str:
-    text = unicodedata.normalize("NFKC", text).replace("–", "-").casefold()
-    return " ".join(text.split())
+DOC_SUFFIXES = {".pdf", ".docx", ".md", ".html", ".txt"}
 
 
 async def main(args: argparse.Namespace) -> int:
-    questions = [json.loads(line) for line in (KB1 / "questions.jsonl").read_text().splitlines()]
-    questions = [q for q in questions if q["type"] == "answerable"]
+    folder = ROOT / "eval/datasets" / args.kb
+    docs = sorted(p for p in folder.iterdir() if p.suffix in DOC_SUFFIXES)
+    lines_in = (folder / "questions.jsonl").read_text(encoding="utf-8").splitlines()
+    questions = [json.loads(line) for line in lines_in]
+    questions = [q for q in questions if q["type"] in {"answerable", "tricky"}]
     if args.limit:
         questions = questions[:: max(1, len(questions) // args.limit)][: args.limit]
     async with session() as s:
@@ -46,7 +37,7 @@ async def main(args: argparse.Namespace) -> int:
             chunk_size=args.chunk, hybrid_enabled=not args.no_hybrid, rerank_enabled=args.rerank
         )
         t = time.monotonic()
-        await s.upload([KB1 / d for d in DOCS])
+        await s.upload(docs)
         sources = await s.wait_ready()
         ingest_s = time.monotonic() - t
         errors = [x for x in sources if x["status"] == "error"]
@@ -74,16 +65,16 @@ async def main(args: argparse.Namespace) -> int:
             result = await retriever.retrieve(s.scope, q["question"], settings, score_threshold=0.0)
             for k in lat:
                 lat[k].append(result.latency_ms.get(k, 0.0))
-            ev = norm(q["evidence"])
+            ev = norm(q["evidence"][0])
             rank = next(
                 (i + 1 for i, c in enumerate(result.candidates) if ev in norm(c.text)), None
             )
             ranks.append(rank)
             if rank is not None and rank <= 4:
                 c = result.candidates[rank - 1]
-                gold = q["gold"]
-                if c.file_name == gold["file_name"] and (
-                    gold["page"] is None or c.page == gold["page"]
+                if any(
+                    c.file_name == g["file_name"] and (g["page"] is None or c.page == g["page"])
+                    for g in q["gold"]
                 ):
                     page_hits += 1
             else:
@@ -106,9 +97,9 @@ async def main(args: argparse.Namespace) -> int:
     if args.limit:
         mode += f", subset {n}"
     lines = [
-        f"# Phase 3 retrieval — KB #1 ({mode})",
+        f"# Retrieval — {args.kb} ({mode})",
         "",
-        f"Questions: {n} answerable · sources: {len(DOCS)} · chunks: {chunks_total} · ingest {ingest_s:.0f} s",
+        f"Questions: {n} answerable + tricky · sources: {len(docs)} · chunks: {chunks_total} · ingest {ingest_s:.0f} s",
         "",
         "| Metric | Value | Target |",
         "|---|---|---|",
@@ -131,7 +122,7 @@ async def main(args: argparse.Namespace) -> int:
     out = (
         ROOT
         / "eval/reports"
-        / f"phase3-retrieval-{mode.replace(', ', '-').replace(' ', '').replace('+', '-')}.md"
+        / f"retrieval-{args.kb}-{mode.replace(', ', '-').replace(' ', '').replace('+', '-')}.md"
     )
     out.write_text(report)
     print(report)
@@ -141,6 +132,7 @@ async def main(args: argparse.Namespace) -> int:
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
+    p.add_argument("--kb", default="kb1_retail")
     p.add_argument("--rerank", action="store_true")
     p.add_argument("--no-hybrid", action="store_true")
     p.add_argument("--chunk", type=int, default=512)
