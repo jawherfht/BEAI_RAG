@@ -31,8 +31,23 @@ class Settings(CoreSettings):
     readiness_timeout_s: float = 2.0
 
     # Model/serving settings shared with the worker live in CoreSettings.
-    rerank_url: str = "http://localhost:8081"
+    rerank_provider: Literal["local", "vllm", "none"] = "local"
+    rerank_url: str = "http://localhost:8080"  # embed-server serves /rerank in dev
     rerank_model: str = "Qwen/Qwen3-Reranker-0.6B"
+    rerank_instruction: str = (
+        "Given a web search query, retrieve relevant passages that answer the query"
+    )
+    rerank_timeout_s: float = 30.0
+    rerank_candidates: int = Field(default=50, gt=0)
+    rerank_min_candidates: int = Field(default=10, gt=0)  # skip re-ranking below this
+    # Re-ranker scores are P(yes) in [0, 1]: their own thresholds (placeholders -> calibrate).
+    rerank_score_threshold: float = Field(default=0.30, ge=0.0, le=1.0)
+    rerank_conf_mid: float = Field(default=0.50, ge=0.0, le=1.0)
+    rerank_conf_high: float = Field(default=0.80, ge=0.0, le=1.0)
+
+    search_prefetch_limit: int = Field(default=50, gt=0)
+    search_hnsw_ef: int = Field(default=128, gt=0)
+    readiness_check_reranker: bool = False
 
     conf_high: float = Field(default=0.70, ge=0.0, le=1.0)
     conf_mid: float = Field(default=0.55, ge=0.0, le=1.0)
@@ -54,6 +69,8 @@ class Settings(CoreSettings):
     def _check(self) -> "Settings":
         if not self.score_threshold <= self.conf_mid <= self.conf_high:
             raise ValueError("thresholds must satisfy SCORE_THRESHOLD <= CONF_MID <= CONF_HIGH")
+        if not self.rerank_score_threshold <= self.rerank_conf_mid <= self.rerank_conf_high:
+            raise ValueError("re-ranker thresholds must be ordered like the dense ones")
         if self.environment == "prod" and self.jwt_secret is not None:
             raise ValueError("JWT_SECRET (HS256) is for dev/test only; use JWT_PUBLIC_KEY in prod")
         if any(a.startswith("HS") for a in self.jwt_algorithms) and self.jwt_secret is None:

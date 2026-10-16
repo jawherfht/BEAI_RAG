@@ -60,8 +60,33 @@ class ChunkPoint:
     payload: dict[str, Any] = field(default_factory=dict)
 
 
+@dataclass(frozen=True, slots=True)
+class ScoredChunk:
+    """One search hit. ``dense_score`` is the cosine similarity to the query (vectors are
+    unit-normalised, so the dot product), used for the grounding threshold and confidence."""
+
+    id: str
+    payload: dict[str, Any]
+    fusion_score: float
+    dense_score: float
+
+
 class TenantScopeViolationError(ValueError):
     """Raised when a payload tries to set tenant/agent ids that differ from the scope."""
+
+
+def _scored(point: qm.ScoredPoint, query: Sequence[float]) -> ScoredChunk:
+    vec = point.vector.get(DENSE_VECTOR) if isinstance(point.vector, dict) else None
+    dense_score = 0.0
+    if isinstance(vec, list):
+        floats = [float(x) for x in vec if isinstance(x, int | float)]
+        dense_score = sum(a * b for a, b in zip(query, floats, strict=False))
+    return ScoredChunk(
+        id=str(point.id),
+        payload=dict(point.payload or {}),
+        fusion_score=float(point.score),
+        dense_score=dense_score,
+    )
 
 
 def scope_filter(scope: TenantScope, extra: Sequence[qm.Condition] = ()) -> qm.Filter:
@@ -206,6 +231,72 @@ class QdrantStore:
             ),
             wait=True,
         )
+
+    async def hybrid_search(
+        self,
+        scope: TenantScope,
+        dense: Sequence[float],
+        sparse_indices: Sequence[int] | None,
+        sparse_values: Sequence[float] | None,
+        *,
+        limit: int,
+        prefetch_limit: int = 50,
+        hnsw_ef: int = 128,
+        agent_scoped_idf: bool = True,
+    ) -> list[ScoredChunk]:
+        """Hybrid search in ONE Query API call (spec section 6, step 3).
+
+        Prefetch dense (limit 50) and BM25 sparse (limit 50), both with the mandatory tenant +
+        agent filter, fused with RRF. Without sparse input it is dense-only. BM25 IDF is
+        computed over this agent's own points, so other tenants never influence ranking.
+        Dense vectors of the hits are returned to compute their exact cosine to the query.
+        """
+        flt = scope_filter(scope)
+        dense_params = qm.SearchParams(
+            hnsw_ef=hnsw_ef,
+            quantization=qm.QuantizationSearchParams(rescore=True, oversampling=2.0),
+        )
+        if sparse_indices is not None and sparse_values is not None:
+            sparse_params = qm.SearchParams(
+                idf=qm.IdfCorpusParams(corpus=flt) if agent_scoped_idf else None
+            )
+            response = await self._client.query_points(
+                collection_name=self._spec.name,
+                prefetch=[
+                    qm.Prefetch(
+                        query=list(dense),
+                        using=DENSE_VECTOR,
+                        filter=flt,
+                        limit=prefetch_limit,
+                        params=dense_params,
+                    ),
+                    qm.Prefetch(
+                        query=qm.SparseVector(
+                            indices=list(sparse_indices), values=list(sparse_values)
+                        ),
+                        using=SPARSE_VECTOR,
+                        filter=flt,
+                        limit=prefetch_limit,
+                        params=sparse_params,
+                    ),
+                ],
+                query=qm.FusionQuery(fusion=qm.Fusion.RRF),
+                limit=limit,
+                with_payload=True,
+                with_vectors=[DENSE_VECTOR],
+            )
+        else:
+            response = await self._client.query_points(
+                collection_name=self._spec.name,
+                query=list(dense),
+                using=DENSE_VECTOR,
+                query_filter=flt,
+                limit=limit,
+                search_params=dense_params,
+                with_payload=True,
+                with_vectors=[DENSE_VECTOR],
+            )
+        return [_scored(p, dense) for p in response.points]
 
     async def delete_stale_points(
         self, scope: TenantScope, source_id: UUID, keep: Sequence[UUID]

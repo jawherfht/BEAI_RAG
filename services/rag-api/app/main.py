@@ -9,17 +9,17 @@ from fastapi import FastAPI
 from app.api import health, knowledge_base, sources
 from app.api.errors import install_error_handlers
 from app.config import Settings, get_settings
-from app.resources import Resources
+from app.resources import ModelOverrides, Resources
 from app.telemetry.metrics import install_http_metrics
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(settings: Settings | None = None, models: ModelOverrides | None = None) -> FastAPI:
     settings = settings or get_settings()
     logging.basicConfig(level=settings.log_level)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        resources = Resources.create(settings)
+        resources = Resources.create(settings, models)
         app.state.resources = resources
         await resources.bootstrap()
         try:

@@ -1,1 +1,1 @@
-"""Answer cache (Phase 3)."""
+"""Answer cache (Redis)."""

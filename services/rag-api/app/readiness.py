@@ -51,8 +51,19 @@ async def check_object_storage(r: Resources) -> None:
     await r.storage.ping()
 
 
-# Embedder (Phase 3, first used by the API there) and LLM (Phase 4) checks join later.
+async def check_embedder(r: Resources) -> None:
+    await r.dense.ping()
+
+
+async def check_reranker(r: Resources) -> None:
+    if r.reranker is None:
+        raise RuntimeError("re-ranker is not configured")
+    await r.reranker.ping()
+
+
+# The LLM check joins in Phase 4.
 CHECKS: dict[str, Check] = {
+    "embedder": check_embedder,
     "qdrant": check_qdrant,
     "postgres": check_postgres,
     "redis": check_redis,
@@ -74,6 +85,8 @@ async def _run(name: str, check: Check, r: Resources) -> tuple[str, CheckResult]
 async def run_checks(
     r: Resources, checks: dict[str, Check] | None = None
 ) -> dict[str, CheckResult]:
-    selected = checks if checks is not None else CHECKS
+    selected = checks if checks is not None else dict(CHECKS)
+    if checks is None and r.settings.readiness_check_reranker:
+        selected["reranker"] = check_reranker
     results = await asyncio.gather(*(_run(n, c, r) for n, c in selected.items()))
     return dict(results)

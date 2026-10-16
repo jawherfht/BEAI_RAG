@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 
 from app.main import create_app
 from tests.helpers import make_settings
-from tests.integration.conftest import Infra
+from tests.integration.conftest import Infra, fake_models
 
 
 def _client(infra: Infra, **overrides: object) -> TestClient:
@@ -16,7 +16,7 @@ def _client(infra: Infra, **overrides: object) -> TestClient:
         **overrides,
     }
     settings = make_settings(**values)
-    return TestClient(create_app(settings))
+    return TestClient(create_app(settings, fake_models(settings)))
 
 
 def test_healthz(migrated: Infra) -> None:
@@ -30,7 +30,14 @@ def test_readyz_all_ok(migrated: Infra) -> None:
         body = r.json()
         assert r.status_code == 200, body
         assert body["status"] == "ok"
-        assert set(body["checks"]) == {"qdrant", "postgres", "redis", "rabbitmq", "object_storage"}
+        assert set(body["checks"]) == {
+            "embedder",
+            "qdrant",
+            "postgres",
+            "redis",
+            "rabbitmq",
+            "object_storage",
+        }
         assert all(c["ok"] for c in body["checks"].values())
 
 

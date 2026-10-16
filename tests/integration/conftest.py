@@ -168,7 +168,7 @@ from httpx import ASGITransport, AsyncClient  # noqa: E402
 
 from app.config import Settings  # noqa: E402
 from app.main import create_app  # noqa: E402
-from app.resources import Resources  # noqa: E402
+from app.resources import ModelOverrides, Resources  # noqa: E402
 from beai_rag_core.embedding.tokenizer import WhitespaceTokenCounter  # noqa: E402
 from beai_rag_core.enums import JobKind  # noqa: E402
 from beai_rag_core.queue import declare_topology, queue_for  # noqa: E402
@@ -204,9 +204,15 @@ def api_settings(infra: Infra, **overrides: object) -> Settings:
         "qdrant_auto_create": True,
         "s3_auto_create_bucket": True,
         "readiness_timeout_s": 3.0,
+        "rerank_provider": "none",
         **overrides,
     }
     return make_settings(**values)
+
+
+def fake_models(settings: Settings) -> ModelOverrides:
+    """The same test doubles the in-process worker uses, so query and document vectors match."""
+    return ModelOverrides(dense=HashingEmbedder(settings.embed_dim), sparse=HashingSparse())
 
 
 @dataclass
@@ -217,7 +223,8 @@ class Api:
 
 @contextlib.asynccontextmanager
 async def running_api(infra: Infra, **overrides: object) -> AsyncIterator[Api]:
-    app = create_app(api_settings(infra, **overrides))
+    settings = api_settings(infra, **overrides)
+    app = create_app(settings, fake_models(settings))
     async with app.router.lifespan_context(app):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://api") as client:
