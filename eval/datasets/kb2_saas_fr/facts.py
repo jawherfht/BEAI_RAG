@@ -1,0 +1,206 @@
+"""KB #2 (SaaS product documentation, French): the "Nuvio" project-management app.
+
+Same structure as KB #1: each fact is one sentence in a document/page/section, with a
+paraphrased French question and an evidence phrase. Text stays within cp1252 for the PDFs.
+"""
+
+from __future__ import annotations
+
+from typing import NamedTuple
+
+
+class Fact(NamedTuple):
+    doc: str
+    page: int | None
+    section: str
+    sentence: str
+    question: str
+    evidence: str
+
+
+class Tricky(NamedTuple):
+    question: str
+    gold: list[tuple[str, int | None]]
+    evidence: list[str]
+
+
+PREFIX = "kb2"
+G, B, S, A, N = "guide-demarrage.pdf", "facturation.pdf", "securite.docx", "api.md", "notes-version.txt"
+TITLES = {
+    G: "Nuvio - Guide de démarrage",
+    B: "Nuvio - Formules et facturation",
+    S: "Nuvio - Sécurité et confidentialité",
+    A: "Nuvio - Référence de l'API",
+    N: "Nuvio - Notes de version 4.2",
+}
+
+FACTS: list[Fact] = [
+    # ---- guide-demarrage.pdf p.1 -------------------------------------------------------
+    Fact(G, 1, "1. Créer votre compte", "Pour créer un compte Nuvio, il suffit d'une adresse e-mail professionnelle et d'un mot de passe d'au moins 12 caractères.", "Quelle longueur minimale doit avoir le mot de passe à l'inscription ?", "au moins 12 caractères"),
+    Fact(G, 1, "1. Créer votre compte", "Le lien de confirmation envoyé par e-mail reste valable pendant 48 heures.", "Combien de temps le lien de confirmation fonctionne-t-il ?", "valable pendant 48 heures"),
+    Fact(G, 1, "1. Créer votre compte", "Vous pouvez aussi vous inscrire avec un compte Google ou Microsoft.", "Peut-on s'inscrire avec son compte Microsoft ?", "compte Google ou Microsoft"),
+    Fact(G, 1, "2. Espaces de travail", "Un espace de travail regroupe les projets, les membres et la facturation d'une même organisation.", "À quoi sert un espace de travail ?", "regroupe les projets, les membres et la facturation"),
+    Fact(G, 1, "2. Espaces de travail", "Le nom de l'espace de travail peut être modifié à tout moment dans Paramètres > Général.", "Où change-t-on le nom de l'espace de travail ?", "Paramètres > Général"),
+    Fact(G, 1, "2. Espaces de travail", "Un même utilisateur peut appartenir à 10 espaces de travail au maximum.", "À combien d'espaces de travail un utilisateur peut-il appartenir ?", "10 espaces de travail au maximum"),
+    Fact(G, 1, "3. Projets et tâches", "Chaque projet propose trois vues : liste, tableau Kanban et diagramme de Gantt.", "Quelles vues sont disponibles dans un projet ?", "liste, tableau Kanban et diagramme de Gantt"),
+    Fact(G, 1, "3. Projets et tâches", "Une tâche peut contenir jusqu'à 50 sous-tâches.", "Combien de sous-tâches peut avoir une tâche ?", "jusqu'à 50 sous-tâches"),
+    Fact(G, 1, "3. Projets et tâches", "Les pièces jointes sont limitées à 100 Mo par fichier.", "Quelle est la taille maximale d'une pièce jointe ?", "100 Mo par fichier"),
+    Fact(G, 1, "3. Projets et tâches", "Les tâches supprimées restent dans la corbeille pendant 30 jours avant d'être effacées définitivement.", "Peut-on récupérer une tâche supprimée par erreur ?", "corbeille pendant 30 jours"),
+    # ---- guide-demarrage.pdf p.2 -------------------------------------------------------
+    Fact(G, 2, "4. Inviter des membres", "Les administrateurs invitent des membres depuis Paramètres > Membres en saisissant leur adresse e-mail.", "Comment ajouter un collègue à l'espace de travail ?", "Paramètres > Membres"),
+    Fact(G, 2, "4. Inviter des membres", "Une invitation expire au bout de 7 jours si elle n'est pas acceptée.", "Une invitation a-t-elle une date d'expiration ?", "expire au bout de 7 jours"),
+    Fact(G, 2, "4. Inviter des membres", "Les invités externes ne voient que les projets auxquels ils ont été ajoutés et ne sont pas facturés.", "Les invités externes sont-ils payants ?", "ne sont pas facturés"),
+    Fact(G, 2, "5. Rôles et permissions", "Nuvio propose quatre rôles : propriétaire, administrateur, membre et invité.", "Quels sont les rôles disponibles ?", "propriétaire, administrateur, membre et invité"),
+    Fact(G, 2, "5. Rôles et permissions", "Seul le propriétaire peut supprimer l'espace de travail ou transférer la propriété.", "Qui peut supprimer un espace de travail ?", "Seul le propriétaire"),
+    Fact(G, 2, "5. Rôles et permissions", "Les membres peuvent créer des projets, sauf si un administrateur a désactivé cette option.", "Un membre peut-il créer un projet ?", "sauf si un administrateur a désactivé cette option"),
+    Fact(G, 2, "6. Notifications", "Les notifications sont envoyées par e-mail, dans l'application et sur mobile.", "Par quels canaux les notifications sont-elles envoyées ?", "par e-mail, dans l'application et sur mobile"),
+    Fact(G, 2, "6. Notifications", "Le résumé quotidien par e-mail est envoyé à 8 h, heure locale de l'utilisateur.", "À quelle heure arrive le récapitulatif quotidien ?", "envoyé à 8 h"),
+    Fact(G, 2, "6. Notifications", "Le mode Ne pas déranger coupe toutes les notifications pendant une plage horaire choisie.", "Comment arrêter les notifications pendant la nuit ?", "Ne pas déranger"),
+    Fact(G, 2, "6. Notifications", "Les mentions @équipe notifient tous les membres d'une équipe en même temps.", "Comment prévenir toute une équipe d'un coup ?", "@équipe notifient tous les membres"),
+    # ---- guide-demarrage.pdf p.3 -------------------------------------------------------
+    Fact(G, 3, "7. Intégrations", "Nuvio s'intègre avec Slack, Microsoft Teams, Google Drive, GitHub et GitLab.", "Nuvio fonctionne-t-il avec GitLab ?", "Slack, Microsoft Teams, Google Drive, GitHub et GitLab"),
+    Fact(G, 3, "7. Intégrations", "L'intégration GitHub lie automatiquement un commit à une tâche si son message contient l'identifiant NUV-123.", "Comment relier un commit à une tâche ?", "identifiant NUV-123"),
+    Fact(G, 3, "7. Intégrations", "Les intégrations sont disponibles à partir de la formule Pro.", "Les intégrations sont-elles incluses dans l'offre gratuite ?", "à partir de la formule Pro"),
+    Fact(G, 3, "8. Application mobile", "L'application mobile est disponible sur iOS 16 et Android 11 ou versions ultérieures.", "Quelle version d'Android faut-il pour l'application ?", "Android 11 ou versions ultérieures"),
+    Fact(G, 3, "8. Application mobile", "Le mode hors ligne permet de consulter et modifier les tâches sans connexion ; les changements se synchronisent au retour du réseau.", "Peut-on travailler sans connexion internet sur mobile ?", "mode hors ligne"),
+    Fact(G, 3, "9. Import de données", "Vous pouvez importer des projets depuis Trello, Asana et des fichiers CSV.", "Peut-on migrer depuis Trello ?", "Trello, Asana et des fichiers CSV"),
+    Fact(G, 3, "9. Import de données", "Un import CSV accepte jusqu'à 10 000 lignes par fichier.", "Combien de lignes un import CSV peut-il contenir ?", "10 000 lignes par fichier"),
+    Fact(G, 3, "10. Raccourcis clavier", "La touche N crée une nouvelle tâche et la combinaison Ctrl+K ouvre la recherche.", "Quel raccourci ouvre la recherche ?", "Ctrl+K ouvre la recherche"),
+    Fact(G, 3, "10. Raccourcis clavier", "La liste complète des raccourcis s'affiche avec la touche ?.", "Comment voir tous les raccourcis clavier ?", "s'affiche avec la touche ?"),
+    Fact(G, 3, "11. Assistance", "Le support répond par chat du lundi au vendredi de 9 h à 18 h (heure de Paris).", "Quand peut-on joindre le support par chat ?", "du lundi au vendredi de 9 h à 18 h"),
+    # ---- facturation.pdf p.1 -----------------------------------------------------------
+    Fact(B, 1, "1. Formules", "La formule Gratuite permet jusqu'à 5 membres et 3 projets actifs.", "Combien de membres l'offre gratuite autorise-t-elle ?", "jusqu'à 5 membres et 3 projets actifs"),
+    Fact(B, 1, "1. Formules", "La formule Pro coûte 12 € par utilisateur et par mois.", "Quel est le prix de la formule Pro ?", "12 € par utilisateur et par mois"),
+    Fact(B, 1, "1. Formules", "La formule Business coûte 24 € par utilisateur et par mois et inclut le SSO et les journaux d'audit.", "Que comprend la formule Business en plus ?", "inclut le SSO et les journaux d'audit"),
+    Fact(B, 1, "1. Formules", "La formule Entreprise est proposée sur devis à partir de 200 utilisateurs.", "Comment obtenir la formule Entreprise ?", "sur devis à partir de 200 utilisateurs"),
+    Fact(B, 1, "2. Essai gratuit", "Chaque nouvel espace de travail bénéficie d'un essai gratuit de 14 jours de la formule Business, sans carte bancaire.", "L'essai demande-t-il une carte bancaire ?", "sans carte bancaire"),
+    Fact(B, 1, "2. Essai gratuit", "À la fin de l'essai, l'espace passe automatiquement à la formule Gratuite si aucun paiement n'est ajouté.", "Que se passe-t-il à la fin de la période d'essai ?", "passe automatiquement à la formule Gratuite"),
+    Fact(B, 1, "3. Paiement", "Nuvio accepte les cartes Visa, Mastercard et American Express ainsi que le prélèvement SEPA.", "Peut-on payer par prélèvement SEPA ?", "prélèvement SEPA"),
+    Fact(B, 1, "3. Paiement", "Le paiement par virement est possible uniquement pour la facturation annuelle.", "Le virement bancaire est-il accepté ?", "uniquement pour la facturation annuelle"),
+    Fact(B, 1, "3. Paiement", "La facturation annuelle donne droit à une remise de 20 %.", "Y a-t-il une réduction si l'on paie à l'année ?", "remise de 20 %"),
+    Fact(B, 1, "3. Paiement", "Les associations et les établissements d'enseignement obtiennent 50 % de réduction sur demande.", "Les associations ont-elles un tarif spécial ?", "50 % de réduction sur demande"),
+    # ---- facturation.pdf p.2 -----------------------------------------------------------
+    Fact(B, 2, "4. Factures", "Les factures sont émises le premier jour de chaque période de facturation et envoyées au contact de facturation.", "Quand les factures sont-elles émises ?", "premier jour de chaque période de facturation"),
+    Fact(B, 2, "4. Factures", "Toutes les factures sont téléchargeables en PDF dans Paramètres > Facturation.", "Où télécharger mes factures ?", "Paramètres > Facturation"),
+    Fact(B, 2, "4. Factures", "La TVA est appliquée selon le pays de l'espace de travail ; les clients professionnels de l'UE peuvent saisir leur numéro de TVA intracommunautaire.", "Comment ne pas payer la TVA en tant qu'entreprise européenne ?", "numéro de TVA intracommunautaire"),
+    Fact(B, 2, "5. Ajout et retrait d'utilisateurs", "L'ajout d'un utilisateur en cours de mois est facturé au prorata.", "Comment est facturé un utilisateur ajouté en milieu de mois ?", "facturé au prorata"),
+    Fact(B, 2, "5. Ajout et retrait d'utilisateurs", "Le retrait d'un utilisateur génère un crédit appliqué sur la facture suivante.", "Est-on remboursé quand on retire un utilisateur ?", "crédit appliqué sur la facture suivante"),
+    Fact(B, 2, "6. Résiliation et remboursement", "Vous pouvez résilier à tout moment ; l'accès payant reste actif jusqu'à la fin de la période déjà payée.", "Que se passe-t-il quand je résilie ?", "jusqu'à la fin de la période déjà payée"),
+    Fact(B, 2, "6. Résiliation et remboursement", "Les abonnements annuels sont remboursables au prorata dans les 30 jours suivant le paiement.", "Peut-on être remboursé d'un abonnement annuel ?", "remboursables au prorata dans les 30 jours"),
+    Fact(B, 2, "6. Résiliation et remboursement", "Les abonnements mensuels ne sont pas remboursés.", "Un mois payé peut-il être remboursé ?", "abonnements mensuels ne sont pas remboursés"),
+    Fact(B, 2, "7. Impayés", "En cas d'échec de paiement, trois nouvelles tentatives ont lieu sur 10 jours avant la suspension de l'espace.", "Que se passe-t-il si mon paiement échoue ?", "trois nouvelles tentatives ont lieu sur 10 jours"),
+    Fact(B, 2, "7. Impayés", "Un espace suspendu reste consultable en lecture seule pendant 60 jours.", "Un espace suspendu est-il encore accessible ?", "lecture seule pendant 60 jours"),
+    # ---- securite.docx (no pages) -----------------------------------------------------
+    Fact(S, None, "Hébergement", "Les données sont hébergées dans l'Union européenne, dans des centres de données situés à Francfort et à Paris.", "Où sont stockées les données ?", "Francfort et à Paris"),
+    Fact(S, None, "Hébergement", "Nuvio est certifié ISO 27001 depuis 2023.", "Nuvio a-t-il une certification de sécurité ?", "certifié ISO 27001"),
+    Fact(S, None, "Chiffrement", "Les données sont chiffrées au repos en AES-256 et en transit avec TLS 1.3.", "Quel chiffrement est utilisé pour les données stockées ?", "AES-256"),
+    Fact(S, None, "Authentification", "L'authentification à deux facteurs est disponible pour tous et peut être imposée par un administrateur.", "Peut-on rendre la double authentification obligatoire ?", "peut être imposée par un administrateur"),
+    Fact(S, None, "Authentification", "Le SSO via SAML 2.0 est disponible avec Okta, Azure AD et Google Workspace sur la formule Business.", "Avec quels fournisseurs le SSO fonctionne-t-il ?", "Okta, Azure AD et Google Workspace"),
+    Fact(S, None, "Authentification", "Les sessions inactives expirent après 30 jours, ou 12 heures si l'administrateur l'exige.", "Au bout de combien de temps une session expire-t-elle ?", "expirent après 30 jours"),
+    Fact(S, None, "Sauvegardes", "Une sauvegarde complète est réalisée toutes les 6 heures et conservée 30 jours.", "À quelle fréquence les données sont-elles sauvegardées ?", "toutes les 6 heures"),
+    Fact(S, None, "Sauvegardes", "La restauration d'un projet supprimé peut être demandée au support dans un délai de 30 jours.", "Peut-on restaurer un projet supprimé il y a deux semaines ?", "demandée au support dans un délai de 30 jours"),
+    Fact(S, None, "RGPD", "Le délégué à la protection des données est joignable à dpo@nuvio.example.", "Comment contacter le DPO ?", "dpo@nuvio.example"),
+    Fact(S, None, "RGPD", "Un accord de traitement des données (DPA) est signé automatiquement à la création d'un espace payant.", "Faut-il signer un DPA séparément ?", "signé automatiquement"),
+    Fact(S, None, "RGPD", "Après la suppression d'un espace de travail, les données sont effacées définitivement sous 30 jours, sauvegardes comprises.", "Combien de temps après suppression les données disparaissent-elles ?", "effacées définitivement sous 30 jours"),
+    Fact(S, None, "Journaux d'audit", "Les journaux d'audit enregistrent connexions, exports et changements de permissions et sont conservés un an.", "Combien de temps les journaux d'audit sont-ils gardés ?", "conservés un an"),
+    Fact(S, None, "Tests de sécurité", "Un test d'intrusion indépendant est mené chaque année et son résumé est fourni sur demande.", "Nuvio fait-il réaliser des tests d'intrusion ?", "test d'intrusion indépendant est mené chaque année"),
+    Fact(S, None, "Tests de sécurité", "Les failles peuvent être signalées à security@nuvio.example dans le cadre du programme de divulgation responsable.", "Où signaler une vulnérabilité ?", "security@nuvio.example"),
+    Fact(S, None, "Disponibilité", "Nuvio garantit une disponibilité de 99,9 % par mois sur la formule Business.", "Quel taux de disponibilité est garanti ?", "99,9 % par mois"),
+    Fact(S, None, "Disponibilité", "L'état du service est publié en temps réel sur status.nuvio.example.", "Où voir si Nuvio est en panne ?", "status.nuvio.example"),
+    # ---- api.md (no pages) -------------------------------------------------------------
+    Fact(A, None, "Accès à l'API", "L'URL de base de l'API est https://api.nuvio.example/v2.", "Quelle est l'adresse de base de l'API ?", "https://api.nuvio.example/v2"),
+    Fact(A, None, "Accès à l'API", "Chaque requête doit inclure un jeton personnel dans l'en-tête Authorization: Bearer.", "Comment s'authentifier auprès de l'API ?", "Authorization: Bearer"),
+    Fact(A, None, "Accès à l'API", "Les jetons personnels se créent dans Profil > Jetons d'API et expirent après un an.", "Où générer un jeton d'API ?", "Profil > Jetons d'API"),
+    Fact(A, None, "Limites", "L'API autorise 600 requêtes par minute et par jeton.", "Combien de requêtes par minute l'API accepte-t-elle ?", "600 requêtes par minute"),
+    Fact(A, None, "Limites", "Au-delà de la limite, l'API renvoie le code HTTP 429 avec un en-tête Retry-After.", "Que renvoie l'API quand on dépasse la limite ?", "code HTTP 429"),
+    Fact(A, None, "Pagination", "Les listes sont paginées par curseur avec 100 éléments au maximum par page.", "Combien d'éléments une page de résultats contient-elle au plus ?", "100 éléments au maximum par page"),
+    Fact(A, None, "Webhooks", "Les webhooks envoient les événements task.created, task.updated et project.archived.", "Quels événements les webhooks envoient-ils ?", "task.created, task.updated et project.archived"),
+    Fact(A, None, "Webhooks", "Chaque webhook est signé avec HMAC-SHA256 dans l'en-tête X-Nuvio-Signature.", "Comment vérifier qu'un webhook vient bien de Nuvio ?", "X-Nuvio-Signature"),
+    Fact(A, None, "Webhooks", "Un webhook en échec est renvoyé jusqu'à 5 fois avec un délai croissant.", "Un webhook non reçu est-il renvoyé ?", "renvoyé jusqu'à 5 fois"),
+    Fact(A, None, "Codes d'erreur", "Le code E-4031 signifie que le quota de stockage de l'espace est atteint.", "Que veut dire l'erreur E-4031 ?", "quota de stockage de l'espace est atteint"),
+    Fact(A, None, "Codes d'erreur", "Le code E-4012 indique un jeton expiré ou révoqué.", "J'obtiens E-4012, pourquoi ?", "jeton expiré ou révoqué"),
+    Fact(A, None, "Codes d'erreur", "Le code E-4220 signale un champ obligatoire manquant dans le corps de la requête.", "À quoi correspond l'erreur E-4220 ?", "champ obligatoire manquant"),
+    Fact(A, None, "Versions", "La version v1 de l'API sera arrêtée le 31 mars 2027.", "Jusqu'à quand la v1 de l'API fonctionnera-t-elle ?", "arrêtée le 31 mars 2027"),
+    Fact(A, None, "SDK", "Des SDK officiels existent pour JavaScript, Python et Go.", "Existe-t-il un SDK Python ?", "JavaScript, Python et Go"),
+    Fact(A, None, "Formats", "Toutes les dates sont échangées au format ISO 8601 en UTC.", "Dans quel format l'API renvoie-t-elle les dates ?", "format ISO 8601 en UTC"),
+    Fact(A, None, "Formats", "Le corps des requêtes ne doit pas dépasser 1 Mo.", "Quelle taille maximale pour le corps d'une requête ?", "ne doit pas dépasser 1 Mo"),
+    Fact(A, None, "Idempotence", "L'en-tête Idempotency-Key évite de créer deux fois la même tâche lors d'une nouvelle tentative.", "Comment éviter les doublons quand on renvoie une requête ?", "Idempotency-Key"),
+    Fact(A, None, "Environnement de test", "Un bac à sable est disponible sur https://sandbox.api.nuvio.example/v2 et ses données sont réinitialisées chaque dimanche.", "Existe-t-il un environnement de test pour l'API ?", "sandbox.api.nuvio.example"),
+    Fact(A, None, "Recherche", "Le paramètre updated_since filtre les tâches modifiées après une date donnée.", "Comment récupérer seulement les tâches modifiées récemment ?", "updated_since"),
+    # ---- notes-version.txt (one page) --------------------------------------------------
+    Fact(N, 1, "Version 4.2", "La version 4.2 a été publiée le 8 septembre 2026.", "Quand la version 4.2 est-elle sortie ?", "publiée le 8 septembre 2026"),
+    Fact(N, 1, "Version 4.2", "La nouvelle vue Charge de travail affiche les tâches assignées à chaque membre par semaine.", "Quelle vue montre la charge de chaque membre ?", "vue Charge de travail"),
+    Fact(N, 1, "Version 4.2", "Les tâches récurrentes peuvent désormais se répéter chaque jour ouvré.", "Peut-on répéter une tâche tous les jours ouvrés ?", "chaque jour ouvré"),
+    Fact(N, 1, "Version 4.2", "Les champs personnalisés acceptent maintenant les formules simples comme SOMME et MOYENNE.", "Les champs personnalisés gèrent-ils des calculs ?", "SOMME et MOYENNE"),
+    Fact(N, 1, "Version 4.2", "Le mode sombre est disponible sur le web et sur mobile.", "Y a-t-il un mode sombre ?", "mode sombre est disponible"),
+    Fact(N, 1, "Version 4.2", "L'export PDF d'un diagramme de Gantt conserve désormais les couleurs des tâches.", "L'export PDF du Gantt garde-t-il les couleurs ?", "conserve désormais les couleurs"),
+    Fact(N, 1, "Version 4.2", "La recherche trouve maintenant le texte contenu dans les pièces jointes PDF.", "La recherche fouille-t-elle dans les PDF joints ?", "texte contenu dans les pièces jointes PDF"),
+    Fact(N, 1, "Version 4.2", "Corrigé : les rappels d'échéance n'étaient pas envoyés pour les tâches sans heure.", "Quel problème de rappel a été corrigé ?", "rappels d'échéance n'étaient pas envoyés"),
+    Fact(N, 1, "Version 4.2", "Corrigé : la synchronisation Google Drive dupliquait certains fichiers renommés.", "Quel bug de Google Drive a été résolu ?", "dupliquait certains fichiers renommés"),
+    Fact(N, 1, "Version 4.2", "La prise en charge d'Internet Explorer 11 est définitivement arrêtée.", "Nuvio fonctionne-t-il encore sous Internet Explorer ?", "Internet Explorer 11 est définitivement arrêtée"),
+    Fact(N, 1, "Version 4.2", "La version 4.3 prévue en décembre 2026 apportera les tableaux de bord partagés.", "Que contiendra la prochaine version ?", "tableaux de bord partagés"),
+    Fact(N, 1, "Version 4.2", "L'application de bureau pour macOS et Windows passe en version 2.0 avec les notifications natives.", "L'application de bureau a-t-elle des notifications ?", "notifications natives"),
+    Fact(N, 1, "Version 4.2", "Le temps de chargement des grands tableaux Kanban a été réduit de 40 %.", "Les tableaux Kanban sont-ils plus rapides ?", "réduit de 40 %"),
+    Fact(N, 1, "Version 4.2", "Les administrateurs peuvent exporter la liste des membres au format CSV.", "Peut-on exporter la liste des membres ?", "exporter la liste des membres au format CSV"),
+    Fact(N, 1, "Version 4.2", "Les dépendances entre tâches signalent désormais les conflits de dates en rouge.", "Comment sont signalés les conflits de dates entre tâches dépendantes ?", "conflits de dates en rouge"),
+]
+
+UNANSWERABLE: list[str] = [
+    "Nuvio propose-t-il une formule pour les particuliers à 5 € ?",
+    "Qui a fondé Nuvio ?",
+    "Nuvio a-t-il une application pour Apple Watch ?",
+    "Peut-on payer en bitcoins ?",
+    "Où se trouvent les bureaux de Nuvio ?",
+    "Quel est le chiffre d'affaires de Nuvio ?",
+    "Nuvio s'intègre-t-il avec Salesforce ?",
+    "Quelle est la capitale du Canada ?",
+    "Combien coûte l'option de stockage supplémentaire ?",
+    "Que signifie l'erreur E-5003 ?",
+    "L'API propose-t-elle un endpoint GraphQL ?",
+    "Peut-on héberger Nuvio sur nos propres serveurs ?",
+    "Nuvio est-il certifié SOC 2 ?",
+    "Quelle est la durée de conservation des messages de chat ?",
+    "Existe-t-il un SDK Ruby ?",
+    "Quand sortira la version 5.0 ?",
+    "Le support répond-il le samedi par téléphone ?",
+    "Peut-on personnaliser le logo dans l'application mobile ?",
+    "Nuvio fonctionne-t-il sur Linux en application de bureau ?",
+    "Combien de jetons d'API un utilisateur peut-il créer ?",
+    "Y a-t-il une réduction pour les startups ?",
+    "Comment exporter un projet vers Jira ?",
+    "Quelle est la limite de projets en formule Pro ?",
+    "Nuvio propose-t-il un chat vidéo intégré ?",
+    "Les données peuvent-elles être hébergées aux États-Unis ?",
+    "Comment changer la langue de l'interface en japonais ?",
+    "Qui est le PDG de Nuvio ?",
+    "Quel est le délai de réponse du support par e-mail ?",
+    "Nuvio propose-t-il une API pour la facturation ?",
+    "Peut-on fusionner deux espaces de travail ?",
+]
+
+TRICKY: list[Tricky] = [
+    Tricky("Différence de prix par utilisateur entre Pro et Business ?", [(B, 1)], ["12 € par utilisateur et par mois", "24 € par utilisateur et par mois"]),
+    Tricky("E-4031 et E-4012 : que signifient ces deux codes ?", [(A, None)], ["quota de stockage de l'espace est atteint", "jeton expiré ou révoqué"]),
+    Tricky("Quel identifiant mettre dans un message de commit ?", [(G, 3)], ["identifiant NUV-123"]),
+    Tricky("Limite de l'API et code renvoyé en cas de dépassement ?", [(A, None)], ["600 requêtes par minute", "code HTTP 429"]),
+    Tricky("Pour 10 utilisateurs en Pro payé à l'année, quelle remise s'applique ?", [(B, 1)], ["remise de 20 %"]),
+    Tricky("Combien de jours dure l'essai et sur quelle formule ?", [(B, 1)], ["essai gratuit de 14 jours de la formule Business"]),
+    Tricky("Fréquence des sauvegardes et durée de conservation ?", [(S, None)], ["toutes les 6 heures et conservée 30 jours"]),
+    Tricky("Quels fournisseurs SSO et quelle norme ?", [(S, None)], ["SAML 2.0", "Okta, Azure AD et Google Workspace"]),
+    Tricky("Date d'arrêt de l'API v1 ?", [(A, None)], ["31 mars 2027"]),
+    Tricky("Versions minimales iOS et Android ?", [(G, 3)], ["iOS 16 et Android 11"]),
+    Tricky("Quel en-tête contient la signature HMAC des webhooks ?", [(A, None)], ["X-Nuvio-Signature"]),
+    Tricky("Combien de membres et de projets en formule Gratuite ?", [(B, 1)], ["jusqu'à 5 membres et 3 projets actifs"]),
+    Tricky("Combien de tentatives de paiement et sur combien de jours ?", [(B, 2)], ["trois nouvelles tentatives ont lieu sur 10 jours"]),
+    Tricky("Adresse du DPO et adresse pour signaler une faille ?", [(S, None)], ["dpo@nuvio.example", "security@nuvio.example"]),
+    Tricky("Date de sortie de la 4.2 et mois prévu pour la 4.3 ?", [(N, 1)], ["publiée le 8 septembre 2026", "prévue en décembre 2026"]),
+    Tricky("Taille max d'une pièce jointe et nombre de lignes max d'un CSV ?", [(G, 1), (G, 3)], ["100 Mo par fichier", "10 000 lignes par fichier"]),
+    Tricky("Quel raccourci crée une tâche ?", [(G, 3)], ["La touche N crée une nouvelle tâche"]),
+    Tricky("Taux de disponibilité garanti et page d'état ?", [(S, None)], ["99,9 % par mois", "status.nuvio.example"]),
+    Tricky("À partir de combien d'utilisateurs la formule Entreprise ?", [(B, 1)], ["à partir de 200 utilisateurs"]),
+    Tricky("Gain de vitesse des tableaux Kanban en pourcentage ?", [(N, 1)], ["réduit de 40 %"]),
+]
+
+assert len(FACTS) == 100, len(FACTS)
+assert len(UNANSWERABLE) == 30
+assert len(TRICKY) == 20

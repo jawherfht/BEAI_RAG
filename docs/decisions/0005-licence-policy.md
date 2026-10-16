@@ -46,4 +46,4 @@ lists no NVIDIA packages. Resolution is limited to linux x86_64/aarch64 and macO
   (`images.unoptimized`), removed from the Docker image; dev-only install.
 - `caniuse-lite` (CC-BY-4.0): browser support *data* used by browserslist at build time.
   CC-BY allows commercial use with attribution (it is not the forbidden NC variant); attribution
-  in `web/knowledge-base-ui/THIRD_PARTY_NOTICES.md`. **To confirm by the product owner.**
+  in `web/knowledge-base-ui/THIRD_PARTY_NOTICES.md`. **Accepted by the product owner (2026-10-16).**

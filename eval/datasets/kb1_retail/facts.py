@@ -20,6 +20,15 @@ class Fact(NamedTuple):
     evidence: str
 
 
+PREFIX = "kb1"
+TITLES = {
+    "returns-policy.pdf": "Acme Retail \u2013 Returns and Shipping Policy",
+    "shipping-guide.pdf": "Acme Retail \u2013 Shipping Guide",
+    "product-care.docx": "Acme Product Care and Size Guide",
+    "store-faq.md": "Acme Stores \u2013 Frequently Asked Questions",
+    "warranty.txt": "Acme Warranty Terms",
+}
+
 R, S, C, F, W = (
     "returns-policy.pdf",
     "shipping-guide.pdf",
@@ -876,3 +885,37 @@ UNANSWERABLE: list[str] = [
     "Is parking free at your stores?",
 ]
 assert len(UNANSWERABLE) == 30
+
+
+class Tricky(NamedTuple):
+    """Answerable but hard: codes, names, numbers, multi-part. All evidence phrases must be
+    retrieved (multi-part questions list several)."""
+
+    question: str
+    gold: list[tuple[str, int | None]]  # (file, page) pairs; any one is a correct citation
+    evidence: list[str]
+
+
+TRICKY: list[Tricky] = [
+    Tricky("What prefix do order numbers have, and until when can I cancel for free?", [(R, 1)], ["starting with AC-", "handed to the carrier"]),
+    Tricky("How much is shipping to the Canary Islands compared with standard delivery?", [(R, 1)], ["Canary Islands and overseas territories costs 15 EUR", "4.90 EUR per order"]),
+    Tricky("What is the furniture surcharge in euros?", [(R, 1)], ["29 EUR delivery surcharge"]),
+    Tricky("Bought on 20 November: what is my last return date?", [(R, 2)], ["returned until 15 January"]),
+    Tricky("Within how many hours must damage be reported, and what proof is needed?", [(R, 2)], ["within 48 hours of delivery with a photo"]),
+    Tricky("Express before noon: what does it cost and when does it arrive?", [(S, 1)], ["next business day when ordered before 12 noon", "Express delivery costs 9.90 EUR"]),
+    Tricky("Which carriers are used in Germany, France and the Benelux?", [(S, 1)], ["Parcels in Germany are shipped with DHL, in France with Colissimo and in the Benelux with PostNL"]),
+    Tricky("What is the weight limit for parcel lockers?", [(S, 1)], ["parcels up to 20 kg"]),
+    Tricky("How many countries, and what does international shipping cost?", [(S, 2)], ["We ship to 31 countries", "International standard shipping costs 12 EUR"]),
+    Tricky("After how many business days without a tracking update is a parcel lost, and how long is the investigation?", [(S, 2)], ["not changed for 7 business days", "takes up to 10 days"]),
+    Tricky("Above what order value is a signature required?", [(S, 3)], ["Orders over 1,000 EUR require a signature"]),
+    Tricky("Gift box price?", [(S, 3)], ["gift box with a handwritten card for 3 EUR"]),
+    Tricky("EU 42 in UK and US sizes?", [(C, None)], ["European size 42 corresponds to UK 8 and US 9"]),
+    Tricky("Re-soling: price and duration?", [(C, None)], ["re-soles leather shoes for 45 EUR in about 10 days"]),
+    Tricky("How many loyalty points for a 250 EUR purchase, and what are 500 points worth?", [(F, None)], ["1 point per euro spent", "10 EUR voucher"]),
+    Tricky("What is the Klarna minimum order and how many instalments?", [(F, None)], ["3 interest-free instalments for orders above 100 EUR"]),
+    Tricky("Customer service phone and email?", [(F, None)], ["+49 30 1234 5678 or help@acme-retail.example"]),
+    Tricky("Frame warranty on Acme furniture versus the general warranty?", [(W, 1)], ["extended 5-year warranty on frames", "legal 2-year warranty"]),
+    Tricky("Battery warranty for heated insoles in months?", [(W, 1)], ["1-year warranty on batteries"]),
+    Tricky("How many days can a warranty repair take?", [(W, 1)], ["up to 21 days"]),
+]
+assert len(TRICKY) == 20

@@ -1,0 +1,105 @@
+%PDF-1.4
+%âãÏÓ
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [6 0 R 8 0 R 10 0 R] /Count 3 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>
+endobj
+5 0 obj
+<< /Length 1369 >>
+stream
+BT
+/F2 18 Tf 1 0 0 1 56 758 Tm (Nuvio - Guide de démarrage) Tj
+/F2 13 Tf 1 0 0 1 56 731 Tm (1. Créer votre compte) Tj
+/F1 10 Tf 1 0 0 1 56 715 Tm (Pour créer un compte Nuvio, il suffit d'une adresse e-mail professionnelle et d'un mot de passe) Tj
+/F1 10 Tf 1 0 0 1 56 699 Tm (d'au moins 12 caractères. Le lien de confirmation envoyé par e-mail reste valable pendant 48) Tj
+/F1 10 Tf 1 0 0 1 56 683 Tm (heures. Vous pouvez aussi vous inscrire avec un compte Google ou Microsoft.) Tj
+/F2 13 Tf 1 0 0 1 56 656 Tm (2. Espaces de travail) Tj
+/F1 10 Tf 1 0 0 1 56 640 Tm (Un espace de travail regroupe les projets, les membres et la facturation d'une même) Tj
+/F1 10 Tf 1 0 0 1 56 624 Tm (organisation. Le nom de l'espace de travail peut être modifié à tout moment dans Paramètres >) Tj
+/F1 10 Tf 1 0 0 1 56 608 Tm (Général. Un même utilisateur peut appartenir à 10 espaces de travail au maximum.) Tj
+/F2 13 Tf 1 0 0 1 56 581 Tm (3. Projets et tâches) Tj
+/F1 10 Tf 1 0 0 1 56 565 Tm (Chaque projet propose trois vues : liste, tableau Kanban et diagramme de Gantt. Une tâche peut) Tj
+/F1 10 Tf 1 0 0 1 56 549 Tm (contenir jusqu'à 50 sous-tâches. Les pièces jointes sont limitées à 100 Mo par fichier. Les) Tj
+/F1 10 Tf 1 0 0 1 56 533 Tm (tâches supprimées restent dans la corbeille pendant 30 jours avant d'être effacées) Tj
+/F1 10 Tf 1 0 0 1 56 517 Tm (définitivement.) Tj
+ET
+endstream
+endobj
+6 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 5 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+7 0 obj
+<< /Length 1348 >>
+stream
+BT
+/F2 13 Tf 1 0 0 1 56 763 Tm (4. Inviter des membres) Tj
+/F1 10 Tf 1 0 0 1 56 747 Tm (Les administrateurs invitent des membres depuis Paramètres > Membres en saisissant leur adresse) Tj
+/F1 10 Tf 1 0 0 1 56 731 Tm (e-mail. Une invitation expire au bout de 7 jours si elle n'est pas acceptée. Les invités) Tj
+/F1 10 Tf 1 0 0 1 56 715 Tm (externes ne voient que les projets auxquels ils ont été ajoutés et ne sont pas facturés.) Tj
+/F2 13 Tf 1 0 0 1 56 688 Tm (5. Rôles et permissions) Tj
+/F1 10 Tf 1 0 0 1 56 672 Tm (Nuvio propose quatre rôles : propriétaire, administrateur, membre et invité. Seul le) Tj
+/F1 10 Tf 1 0 0 1 56 656 Tm (propriétaire peut supprimer l'espace de travail ou transférer la propriété. Les membres peuvent) Tj
+/F1 10 Tf 1 0 0 1 56 640 Tm (créer des projets, sauf si un administrateur a désactivé cette option.) Tj
+/F2 13 Tf 1 0 0 1 56 613 Tm (6. Notifications) Tj
+/F1 10 Tf 1 0 0 1 56 597 Tm (Les notifications sont envoyées par e-mail, dans l'application et sur mobile. Le résumé) Tj
+/F1 10 Tf 1 0 0 1 56 581 Tm (quotidien par e-mail est envoyé à 8 h, heure locale de l'utilisateur. Le mode Ne pas déranger) Tj
+/F1 10 Tf 1 0 0 1 56 565 Tm (coupe toutes les notifications pendant une plage horaire choisie. Les mentions @équipe) Tj
+/F1 10 Tf 1 0 0 1 56 549 Tm (notifient tous les membres d'une équipe en même temps.) Tj
+ET
+endstream
+endobj
+8 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 7 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+9 0 obj
+<< /Length 1454 >>
+stream
+BT
+/F2 13 Tf 1 0 0 1 56 763 Tm (7. Intégrations) Tj
+/F1 10 Tf 1 0 0 1 56 747 Tm (Nuvio s'intègre avec Slack, Microsoft Teams, Google Drive, GitHub et GitLab. L'intégration) Tj
+/F1 10 Tf 1 0 0 1 56 731 Tm (GitHub lie automatiquement un commit à une tâche si son message contient l'identifiant NUV-123.) Tj
+/F1 10 Tf 1 0 0 1 56 715 Tm (Les intégrations sont disponibles à partir de la formule Pro.) Tj
+/F2 13 Tf 1 0 0 1 56 688 Tm (8. Application mobile) Tj
+/F1 10 Tf 1 0 0 1 56 672 Tm (L'application mobile est disponible sur iOS 16 et Android 11 ou versions ultérieures. Le mode) Tj
+/F1 10 Tf 1 0 0 1 56 656 Tm (hors ligne permet de consulter et modifier les tâches sans connexion ; les changements se) Tj
+/F1 10 Tf 1 0 0 1 56 640 Tm (synchronisent au retour du réseau.) Tj
+/F2 13 Tf 1 0 0 1 56 613 Tm (9. Import de données) Tj
+/F1 10 Tf 1 0 0 1 56 597 Tm (Vous pouvez importer des projets depuis Trello, Asana et des fichiers CSV. Un import CSV) Tj
+/F1 10 Tf 1 0 0 1 56 581 Tm (accepte jusqu'à 10 000 lignes par fichier.) Tj
+/F2 13 Tf 1 0 0 1 56 554 Tm (10. Raccourcis clavier) Tj
+/F1 10 Tf 1 0 0 1 56 538 Tm (La touche N crée une nouvelle tâche et la combinaison Ctrl+K ouvre la recherche. La liste) Tj
+/F1 10 Tf 1 0 0 1 56 522 Tm (complète des raccourcis s'affiche avec la touche ?.) Tj
+/F2 13 Tf 1 0 0 1 56 495 Tm (11. Assistance) Tj
+/F1 10 Tf 1 0 0 1 56 479 Tm (Le support répond par chat du lundi au vendredi de 9 h à 18 h \(heure de Paris\).) Tj
+ET
+endstream
+endobj
+10 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 9 0 R /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>
+endobj
+xref
+0 11
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000134 00000 n 
+0000000231 00000 n 
+0000000333 00000 n 
+0000001754 00000 n 
+0000001890 00000 n 
+0000003290 00000 n 
+0000003426 00000 n 
+0000004932 00000 n 
+trailer
+<< /Size 11 /Root 1 0 R >>
+startxref
+5069
+%%EOF
