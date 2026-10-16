@@ -15,8 +15,8 @@ import importlib.util
 import json
 import sys
 import textwrap
-from datetime import UTC, datetime
 from collections import OrderedDict
+from datetime import UTC, datetime
 from pathlib import Path
 from types import ModuleType
 from typing import Any
