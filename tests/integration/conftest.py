@@ -172,7 +172,7 @@ from app.resources import ModelOverrides, Resources  # noqa: E402
 from beai_rag_core.embedding.tokenizer import WhitespaceTokenCounter  # noqa: E402
 from beai_rag_core.enums import JobKind  # noqa: E402
 from beai_rag_core.queue import declare_topology, queue_for  # noqa: E402
-from tests.fakes import HashingEmbedder, HashingSparse  # noqa: E402
+from tests.fakes import HashingEmbedder, HashingSparse, ScriptedLLM  # noqa: E402
 from tests.helpers import make_settings, make_token  # noqa: E402
 from worker.consumer import consume  # noqa: E402
 from worker.parsers.docling_parser import DoclingParser  # noqa: E402
@@ -205,14 +205,23 @@ def api_settings(infra: Infra, **overrides: object) -> Settings:
         "s3_auto_create_bucket": True,
         "readiness_timeout_s": 3.0,
         "rerank_provider": "none",
+        "readiness_check_llm": False,
+        # Thresholds for the hashing test embedder (real values come from calibration).
+        "score_threshold": 0.20,
+        "conf_mid": 0.30,
+        "conf_high": 0.45,
         **overrides,
     }
     return make_settings(**values)
 
 
-def fake_models(settings: Settings) -> ModelOverrides:
+def fake_models(settings: Settings, llm: object | None = None) -> ModelOverrides:
     """The same test doubles the in-process worker uses, so query and document vectors match."""
-    return ModelOverrides(dense=HashingEmbedder(settings.embed_dim), sparse=HashingSparse())
+    return ModelOverrides(
+        dense=HashingEmbedder(settings.embed_dim),
+        sparse=HashingSparse(),
+        llm=llm or ScriptedLLM(),  # type: ignore[arg-type]
+    )
 
 
 @dataclass
@@ -222,9 +231,11 @@ class Api:
 
 
 @contextlib.asynccontextmanager
-async def running_api(infra: Infra, **overrides: object) -> AsyncIterator[Api]:
+async def running_api(
+    infra: Infra, llm: object | None = None, **overrides: object
+) -> AsyncIterator[Api]:
     settings = api_settings(infra, **overrides)
-    app = create_app(settings, fake_models(settings))
+    app = create_app(settings, fake_models(settings, llm))
     async with app.router.lifespan_context(app):
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://api") as client:

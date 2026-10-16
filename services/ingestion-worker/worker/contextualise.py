@@ -27,7 +27,7 @@ class Contextualiser:
         self,
         base_url: str,
         model: str,
-        api_key: str,
+        api_key: str | None,
         *,
         disable_thinking: bool = True,
         concurrency: int = 4,
@@ -36,7 +36,7 @@ class Contextualiser:
         self._client = client or httpx.AsyncClient(
             base_url=base_url.rstrip("/"),
             timeout=60,
-            headers={"Authorization": f"Bearer {api_key}"},
+            headers={"Authorization": f"Bearer {api_key}"} if api_key else {},
         )
         self._model = model
         self._disable_thinking = disable_thinking

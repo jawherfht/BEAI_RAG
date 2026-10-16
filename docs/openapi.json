@@ -1,6 +1,54 @@
 {
   "components": {
     "schemas": {
+      "AnswerIn": {
+        "additionalProperties": false,
+        "description": "The tenant and agent come from the auth context, never from this body.",
+        "properties": {
+          "conversation_history": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/TurnIn"
+            },
+            "maxItems": 20,
+            "title": "Conversation History",
+            "type": "array"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "persona": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PersonaIn"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "question": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "AnswerIn",
+        "type": "object"
+      },
       "Body_upload_files_v1_agents__agent_id__sources_files_post": {
         "properties": {
           "files": {
@@ -291,6 +339,50 @@
         "title": "KnowledgeBaseStatusOut",
         "type": "object"
       },
+      "PersonaIn": {
+        "additionalProperties": false,
+        "description": "Personality settings, read only to build the system prompt (spec section 1.3).",
+        "properties": {
+          "agent_name": {
+            "default": "this assistant",
+            "maxLength": 100,
+            "title": "Agent Name",
+            "type": "string"
+          },
+          "boundaries": {
+            "default": "only topics covered by the knowledge base",
+            "maxLength": 500,
+            "title": "Boundaries",
+            "type": "string"
+          },
+          "instructions": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "response_style": {
+            "default": "concise",
+            "maxLength": 100,
+            "title": "Response Style",
+            "type": "string"
+          },
+          "role": {
+            "default": "helpful assistant",
+            "maxLength": 500,
+            "title": "Role",
+            "type": "string"
+          },
+          "tone": {
+            "default": "friendly",
+            "maxLength": 100,
+            "title": "Tone",
+            "type": "string"
+          }
+        },
+        "title": "PersonaIn",
+        "type": "object"
+      },
       "SourceAccepted": {
         "properties": {
           "duplicate": {
@@ -536,6 +628,72 @@
         "title": "SourceOut",
         "type": "object"
       },
+      "SourceRef": {
+        "properties": {
+          "file_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Name"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section"
+          },
+          "snippet": {
+            "title": "Snippet",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "file_name",
+          "page",
+          "section",
+          "url",
+          "snippet",
+          "score"
+        ],
+        "title": "SourceRef",
+        "type": "object"
+      },
       "SourceStatus": {
         "enum": [
           "queued",
@@ -557,6 +715,94 @@
         ],
         "title": "SourceType",
         "type": "string"
+      },
+      "TestAnswerOut": {
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "cache_hit": {
+            "default": false,
+            "title": "Cache Hit",
+            "type": "boolean"
+          },
+          "confidence": {
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "fallback": {
+            "title": "Fallback",
+            "type": "boolean"
+          },
+          "latency_ms": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Latency Ms",
+            "type": "object"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceRef"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "spoken_text": {
+            "title": "Spoken Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "answer",
+          "spoken_text",
+          "sources",
+          "confidence",
+          "fallback",
+          "latency_ms"
+        ],
+        "title": "TestAnswerOut",
+        "type": "object"
+      },
+      "TurnIn": {
+        "properties": {
+          "role": {
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 2000,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "text"
+        ],
+        "title": "TurnIn",
+        "type": "object"
       },
       "UrlSourceIn": {
         "additionalProperties": false,
@@ -690,6 +936,89 @@
         "summary": "Readyz",
         "tags": [
           "health"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/answer": {
+      "post": {
+        "operationId": "answer_sse_v1_agents__agent_id__answer_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "text/event-stream": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Answer Sse",
+        "tags": [
+          "answer"
         ]
       }
     },
@@ -1420,6 +1749,91 @@
         "summary": "Reindex Source",
         "tags": [
           "sources"
+        ]
+      }
+    },
+    "/v1/agents/{agent_id}/test": {
+      "post": {
+        "description": "\"Test this agent\" panel: the full pipeline, returned as one JSON object.",
+        "operationId": "test_agent_v1_agents__agent_id__test_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "title": "Agent Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestAnswerOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Test Agent",
+        "tags": [
+          "answer"
         ]
       }
     }

@@ -61,7 +61,10 @@ async def check_reranker(r: Resources) -> None:
     await r.reranker.ping()
 
 
-# The LLM check joins in Phase 4.
+async def check_llm(r: Resources) -> None:
+    await r.llm.ping()
+
+
 CHECKS: dict[str, Check] = {
     "embedder": check_embedder,
     "qdrant": check_qdrant,
@@ -88,5 +91,7 @@ async def run_checks(
     selected = checks if checks is not None else dict(CHECKS)
     if checks is None and r.settings.readiness_check_reranker:
         selected["reranker"] = check_reranker
+    if checks is None and r.settings.readiness_check_llm:
+        selected["llm"] = check_llm
     results = await asyncio.gather(*(_run(n, c, r) for n, c in selected.items()))
     return dict(results)

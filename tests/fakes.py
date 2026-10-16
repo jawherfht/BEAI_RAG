@@ -9,7 +9,7 @@ from __future__ import annotations
 import hashlib
 import math
 import re
-from collections.abc import Sequence
+from collections.abc import AsyncIterator, Sequence
 
 from beai_rag_core.embedding.base import SparseVector
 
@@ -74,3 +74,36 @@ class HashingSparse:
 
     async def encode_queries(self, texts: Sequence[str]) -> list[SparseVector]:
         return [self._vec(t) for t in texts]
+
+
+class ScriptedLLM:
+    """OpenAI-compatible LLM double: answers from a function of the prompt, streams words."""
+
+    def __init__(self, reply=None, *, fail: Exception | None = None) -> None:  # type: ignore[no-untyped-def]
+        self._reply = reply or (
+            lambda messages: (
+                "Returns are accepted within 30 days, unworn, with receipt [1] — see Section 4."
+            )
+        )
+        self._fail = fail
+        self.calls: list[list[dict[str, str]]] = []
+
+    def stream(self, messages, *, max_tokens: int, temperature: float):  # type: ignore[no-untyped-def]
+        from app.generation.llm import LLMEvent, Usage
+
+        async def gen() -> AsyncIterator[LLMEvent]:
+            self.calls.append(list(messages))
+            if self._fail is not None:
+                raise self._fail
+            text = self._reply(messages)
+            for word in re.findall(r"\S+\s*", text):
+                yield LLMEvent(token=word)
+            yield LLMEvent(usage=Usage(prompt_tokens=321, completion_tokens=len(text.split())))
+
+        return gen()
+
+    async def ping(self) -> None:
+        return None
+
+    async def close(self) -> None:
+        return None

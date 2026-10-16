@@ -6,9 +6,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.api import health, knowledge_base, sources
+from app.api import answer, health, knowledge_base, sources
 from app.api.errors import install_error_handlers
 from app.config import Settings, get_settings
+from app.grpc_server import start_grpc_server
 from app.resources import ModelOverrides, Resources
 from app.telemetry.metrics import install_http_metrics
 
@@ -22,9 +23,12 @@ def create_app(settings: Settings | None = None, models: ModelOverrides | None =
         resources = Resources.create(settings, models)
         app.state.resources = resources
         await resources.bootstrap()
+        grpc_server = await start_grpc_server(resources)
         try:
             yield
         finally:
+            if grpc_server is not None:
+                await grpc_server.stop(grace=5)
             await resources.close()
 
     app = FastAPI(
@@ -38,4 +42,5 @@ def create_app(settings: Settings | None = None, models: ModelOverrides | None =
     app.include_router(health.router)
     app.include_router(knowledge_base.router)
     app.include_router(sources.router)
+    app.include_router(answer.router)
     return app

@@ -25,6 +25,7 @@ from pydantic import BaseModel
 from beai_rag_core.enums import JobKind
 
 INGEST_EXCHANGE = "beai.ingest"
+USAGE_QUEUE = "usage.events"  # credit management consumes this (spec section 7)
 DLX_EXCHANGE = "beai.ingest.dlx"
 DEAD_QUEUE = "ingest.dead"
 MAX_RETRIES = 3
@@ -116,9 +117,11 @@ class QueuePublisher:
     _connection: AbstractRobustConnection | None = None
     _channel: AbstractChannel | None = None
     _exchange: AbstractExchange | None = None
+    _usage_declared: bool = False
 
     async def _ensure(self) -> AbstractExchange:
         if self._exchange is None or self._channel is None or self._channel.is_closed:
+            self._usage_declared = False
             if self._connection is None or self._connection.is_closed:
                 self._connection = await aio_pika.connect_robust(self.url, timeout=5)
             self._channel = await self._connection.channel(publisher_confirms=True)
@@ -128,6 +131,22 @@ class QueuePublisher:
     async def publish(self, job: IngestJob) -> None:
         exchange = await self._ensure()
         await exchange.publish(job_message(job), routing_key=queue_for(job.kind))
+
+    async def publish_usage(self, event: dict[str, Any]) -> None:
+        """One usage event per answer: tokens_in, tokens_out, rerank_used, ... (spec 7)."""
+        await self._ensure()
+        assert self._channel is not None
+        if not self._usage_declared:
+            await self._channel.declare_queue(USAGE_QUEUE, durable=True)
+            self._usage_declared = True
+        await self._channel.default_exchange.publish(
+            aio_pika.Message(
+                body=json.dumps(event, default=str).encode(),
+                content_type="application/json",
+                delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+            ),
+            routing_key=USAGE_QUEUE,
+        )
 
     async def ping(self) -> None:
         await self._ensure()

@@ -32,6 +32,7 @@ def test_readyz_all_ok(migrated: Infra) -> None:
         assert body["status"] == "ok"
         assert set(body["checks"]) == {
             "embedder",
+            "llm",
             "qdrant",
             "postgres",
             "redis",

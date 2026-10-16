@@ -39,7 +39,7 @@ def build_pipeline(settings: WorkerSettings) -> tuple[IngestionPipeline, QdrantS
         Contextualiser(
             settings.llm_base_url,
             settings.llm_model,
-            settings.llm_api_key.get_secret_value(),
+            settings.llm_key(),
             disable_thinking=settings.llm_disable_thinking,
             concurrency=settings.contextual_concurrency,
         )

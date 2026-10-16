@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 from app.cache.answer_cache import AnswerCache
 from app.config import Settings
+from app.generation.llm import LLMClient, OpenAICompatibleClient
 from app.retrieval.confidence import Thresholds
 from app.retrieval.reranker import LocalReranker, Reranker, VllmReranker
 from app.retrieval.retriever import Retriever
@@ -31,6 +32,22 @@ class ModelOverrides:
     dense: DenseEmbedder | None = None
     sparse: SparseEncoder | None = None
     reranker: Reranker | None = None
+    llm: LLMClient | None = None
+
+
+def build_llm(settings: Settings) -> LLMClient:
+    """Provider switch is configuration only (LLM_BASE_URL, LLM_MODEL, LLM_THINKING_SWITCH)."""
+    return OpenAICompatibleClient(
+        settings.llm_base_url,
+        settings.llm_model,
+        api_key=settings.llm_key(),
+        disable_thinking=settings.llm_disable_thinking,
+        thinking_switch=settings.llm_thinking_switch,
+        timeout_s=settings.llm_timeout_s,
+        max_retries=settings.llm_max_retries,
+        retry_base_s=settings.llm_retry_base_s,
+        retry_max_wait_s=settings.llm_retry_max_wait_s,
+    )
 
 
 def build_reranker(settings: Settings) -> Reranker | None:
@@ -41,7 +58,7 @@ def build_reranker(settings: Settings) -> Reranker | None:
             settings.rerank_url,
             settings.rerank_model,
             instruction=settings.rerank_instruction,
-            api_key=settings.llm_api_key.get_secret_value(),
+            api_key=settings.llm_key(),
             timeout_s=settings.rerank_timeout_s,
         )
     return LocalReranker(settings.rerank_url, timeout_s=settings.rerank_timeout_s)
@@ -61,6 +78,9 @@ class Resources:
     reranker: Reranker | None
     retriever: Retriever
     retrieval_cache: AnswerCache
+    answer_cache: AnswerCache
+    llm: LLMClient
+    grpc_port: int | None = None
 
     @classmethod
     def create(cls, settings: Settings, overrides: ModelOverrides | None = None) -> Resources:
@@ -106,6 +126,8 @@ class Resources:
             reranker=reranker,
             retriever=retriever,
             retrieval_cache=AnswerCache(redis, settings.answer_cache_ttl_s, kind="retrieval"),
+            answer_cache=AnswerCache(redis, settings.answer_cache_ttl_s, kind="answer"),
+            llm=o.llm or build_llm(settings),
         )
 
     async def bootstrap(self) -> None:
@@ -133,6 +155,7 @@ class Resources:
         await self.publisher.close()
         await self.store.close()
         await self.dense.close()
+        await self.llm.close()
         if self.reranker is not None:
             await self.reranker.close()
         await self.redis.aclose()

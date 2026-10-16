@@ -18,7 +18,7 @@ def build_dense_embedder(settings: CoreSettings) -> DenseEmbedder:
             settings.embed_query_template,
             batch_size=settings.embed_batch_size,
             timeout_s=settings.embed_timeout_s,
-            api_key=settings.llm_api_key.get_secret_value(),
+            api_key=settings.llm_key(),
         )
     # "tei" (GPU) and "local" (a CPU embedding service, e.g. the TEI CPU image) share the
     # TEI /embed contract, so the code path is identical.

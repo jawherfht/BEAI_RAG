@@ -1,1 +1,1 @@
-"""Prompt builder, LLM client, streaming, citation parser (Phase 4)."""
+"""Prompt builder, LLM client, streaming, citation parser."""

@@ -45,6 +45,20 @@ class Settings(CoreSettings):
     rerank_conf_mid: float = Field(default=0.50, ge=0.0, le=1.0)
     rerank_conf_high: float = Field(default=0.80, ge=0.0, le=1.0)
 
+    llm_max_input_tokens: int = Field(default=2500, gt=200)  # prompt budget (TTFT)
+    readiness_check_llm: bool = True
+    answer_log_sample_rate: float = Field(default=0.1, ge=0.0, le=1.0)
+    answer_log_retention_days: int = Field(default=30, gt=0)
+
+    # gRPC for the Interaction Agents Service. Tenant metadata is trusted only over mTLS.
+    grpc_enabled: bool = True
+    grpc_host: str = "0.0.0.0"  # noqa: S104 - container listens on all interfaces
+    grpc_port: int = 50051
+    grpc_tls_cert: str | None = None
+    grpc_tls_key: str | None = None
+    grpc_client_ca: str | None = None
+    grpc_allow_insecure: bool = False
+
     search_prefetch_limit: int = Field(default=50, gt=0)
     search_hnsw_ef: int = Field(default=128, gt=0)
     readiness_check_reranker: bool = False

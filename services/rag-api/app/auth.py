@@ -15,7 +15,7 @@ from typing import Annotated, Any
 from uuid import UUID
 
 import jwt
-from fastapi import Depends, Header, Path, Request
+from fastapi import Depends, Header, Path, Request, WebSocket
 
 from app.config import Settings
 from app.domain.errors import NotFoundError, UnauthorizedError
@@ -134,3 +134,26 @@ async def get_agent_scope(
 
 AuthDep = Annotated[AuthContext, Depends(get_auth_context)]
 AgentScopeDep = Annotated[TenantScope, Depends(get_agent_scope)]
+
+
+def scope_from_websocket(websocket: WebSocket, agent_id: str, settings: Settings) -> TenantScope:
+    """WebSocket auth: ``Authorization: Bearer`` / ``X-API-Key`` headers, or the
+    ``access_token`` query parameter (browsers cannot set headers on a WebSocket)."""
+    authorization = websocket.headers.get("authorization")
+    token = websocket.query_params.get("access_token")
+    if authorization:
+        scheme, _, value = authorization.partition(" ")
+        if scheme.lower() != "bearer" or not value:
+            raise UnauthorizedError("Authorization header must be 'Bearer <token>'")
+        ctx = context_from_jwt(value.strip(), settings)
+    elif token:
+        ctx = context_from_jwt(token, settings)
+    elif api_key := websocket.headers.get("x-api-key"):
+        ctx = context_from_api_key(api_key, settings)
+    else:
+        raise UnauthorizedError("Missing credentials")
+    try:
+        parsed = UUID(agent_id)
+    except ValueError as exc:
+        raise NotFoundError("Agent not found") from exc
+    return ctx.scope_for(parsed)

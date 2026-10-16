@@ -40,12 +40,13 @@ dev = [
   "ruff>=0.11",
   "testcontainers>=4.10",
   "pip-licenses>=5.0",
+  "grpcio-tools>=1.68",
 ]
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-extend-exclude = ["services/rag-api/app/db/alembic/versions"]
+extend-exclude = ["services/rag-api/app/db/alembic/versions", "services/rag-api/app/grpc_gen"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "N", "S", "ASYNC", "RUF", "SIM", "PTH", "T20"]
@@ -60,6 +61,7 @@ known-first-party = ["app", "worker", "beai_rag_core", "tests"]
 "eval/**" = ["T20", "RUF001", "S311", "SIM905", "E501"]  # data files / reports
 "services/ingestion-worker/worker/chunking/sentences.py" = ["RUF001"]  # CJK/Arabic punctuation
 "services/rag-api/app/cache/answer_cache.py" = ["RUF001"]  # CJK/Arabic punctuation
+"services/rag-api/app/generation/prompt.py" = ["E501", "RUF001"]  # spec 6.1 rules verbatim
 
 [tool.mypy]
 strict = true
@@ -67,10 +69,10 @@ python_version = "3.12"
 plugins = ["pydantic.mypy"]
 mypy_path = ["packages/beai_rag_core", "services/rag-api", "services/ingestion-worker", "services/embed-server"]
 explicit_package_bases = true
-exclude = ["services/rag-api/app/db/alembic/versions/"]
+exclude = ["services/rag-api/app/db/alembic/versions/", "services/rag-api/app/grpc_gen/"]
 
 [[tool.mypy.overrides]]
-module = ["aio_pika.*", "aiobotocore.*", "botocore.*", "testcontainers.*", "lxml.*", "fastembed.*", "trafilatura.*", "sentence_transformers.*"]
+module = ["aio_pika.*", "aiobotocore.*", "botocore.*", "testcontainers.*", "lxml.*", "fastembed.*", "trafilatura.*", "sentence_transformers.*", "grpc.*", "grpc_tools.*", "app.grpc_gen.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

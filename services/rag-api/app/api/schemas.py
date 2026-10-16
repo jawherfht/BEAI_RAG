@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import AnyHttpUrl, BaseModel, ConfigDict, Field, field_validator
 
@@ -121,3 +121,55 @@ class BusinessInfoIn(BaseModel):
 
     def is_empty(self) -> bool:
         return not any([self.company_name, self.hours, self.address, self.contact, self.faq])
+
+
+# ---- answering (Phase 4) ------------------------------------------------------------------
+
+
+class PersonaIn(BaseModel):
+    """Personality settings, read only to build the system prompt (spec section 1.3)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    agent_name: Annotated[str, Field(max_length=100)] = "this assistant"
+    role: Annotated[str, Field(max_length=500)] = "helpful assistant"
+    instructions: Annotated[str, Field(max_length=1000)] = ""
+    tone: Annotated[str, Field(max_length=100)] = "friendly"
+    response_style: Annotated[str, Field(max_length=100)] = "concise"
+    boundaries: Annotated[str, Field(max_length=500)] = "only topics covered by the knowledge base"
+
+
+class TurnIn(BaseModel):
+    role: Literal["user", "assistant"]
+    text: Annotated[str, Field(max_length=2000)]
+
+
+class AnswerIn(BaseModel):
+    """The tenant and agent come from the auth context, never from this body."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    question: Annotated[str, Field(min_length=1, max_length=1000)]
+    language: Annotated[str, Field(max_length=16)] | None = None
+    persona: PersonaIn | None = None
+    conversation_history: Annotated[list[TurnIn], Field(max_length=20)] = []
+
+
+class SourceRef(BaseModel):
+    file_name: str | None
+    page: int | None
+    section: str | None
+    url: str | None
+    snippet: str
+    score: float
+
+
+class TestAnswerOut(BaseModel):
+    answer: str
+    spoken_text: str
+    sources: list[SourceRef]
+    confidence: Literal["high", "medium", "low"]
+    fallback: bool
+    latency_ms: dict[str, float]
+    cache_hit: bool = False
+    error: str | None = None

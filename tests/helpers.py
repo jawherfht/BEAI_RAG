@@ -19,6 +19,7 @@ def make_settings(**overrides: Any) -> Settings:
         "qdrant_auto_create": False,
         "s3_auto_create_bucket": False,
         "readiness_timeout_s": 0.5,
+        "grpc_enabled": False,
     }
     base.update(overrides)
     return Settings(_env_file=None, **base)

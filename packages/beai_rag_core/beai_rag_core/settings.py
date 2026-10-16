@@ -52,13 +52,28 @@ class CoreSettings(BaseSettings):
     model_cache_dir: str | None = None
 
     # LLM (OpenAI-compatible). Used by generation (Phase 4) and contextual chunks.
+    # Production: vLLM on the GPU pool. Dev: any OpenAI-compatible endpoint (e.g. Groq).
     llm_base_url: str = "http://localhost:8000/v1"
     llm_model: str = "Qwen/Qwen3.8-27B"
-    llm_api_key: SecretStr = SecretStr("not-needed-locally")
+    # Leave unset when a gateway/proxy injects the Authorization header (no header is sent).
+    llm_api_key: SecretStr | None = None
     llm_disable_thinking: bool = True
+    # How the provider disables thinking: vLLM/SGLang use chat_template_kwargs.enable_thinking;
+    # Groq uses reasoning_effort="none" (it rejects chat_template_kwargs). See ADR 0009.
+    llm_thinking_switch: Literal["chat_template_kwargs", "reasoning_effort", "none"] = (
+        "chat_template_kwargs"
+    )
+    llm_timeout_s: float = Field(default=30.0, gt=0)
+    llm_max_retries: int = Field(default=4, ge=0)  # 429 / 5xx / connect errors before 1st token
+    llm_retry_base_s: float = Field(default=1.0, gt=0)
+    llm_retry_max_wait_s: float = Field(default=20.0, gt=0)
     llm_max_tokens: int = Field(default=200, gt=0)
     llm_temperature: float = Field(default=0.2, ge=0.0, le=2.0)
     contextual_chunks: bool = False
 
     max_upload_mb: int = Field(default=50, gt=0)
+
+    def llm_key(self) -> str | None:
+        return self.llm_api_key.get_secret_value() if self.llm_api_key else None
+
     score_threshold: float = Field(default=0.45, ge=0.0, le=1.0)
