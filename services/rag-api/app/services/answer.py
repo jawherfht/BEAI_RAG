@@ -174,13 +174,15 @@ class AnswerService:
         tokens_in = tokens_out = 0
         t_llm = time.perf_counter()
         ttft: float | None = None
+        waited_ms = 0.0
         try:
             async for event in r.llm.stream(
                 prompt.messages, max_tokens=s.llm_max_tokens, temperature=s.llm_temperature
             ):
                 if event.token:
                     if ttft is None:
-                        ttft = _ms(t_llm)
+                        waited_ms = event.wait_s * 1000
+                        ttft = _ms(t_llm) - waited_ms
                     raw.append(event.token)
                     yield TokenEvent(event.token, spoken.feed(event.token))
                 if event.usage:
@@ -200,7 +202,9 @@ class AnswerService:
         if tail:
             yield TokenEvent("", tail)
         latency["llm_ttft"] = ttft or 0.0
-        latency["llm_total"] = _ms(t_llm)
+        latency["llm_total"] = _ms(t_llm) - waited_ms
+        if waited_ms:
+            latency["llm_rate_limit_wait"] = waited_ms
         latency["total"] = _ms(t0)
 
         text = "".join(raw)

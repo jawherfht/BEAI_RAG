@@ -1,0 +1,782 @@
+[
+  {
+    "id": "kb1-a001",
+    "type": "answerable",
+    "top_score": 0.6491433288943476,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a002",
+    "type": "answerable",
+    "top_score": 0.7435159042650563,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a003",
+    "type": "answerable",
+    "top_score": 0.6358775049664395,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a004",
+    "type": "answerable",
+    "top_score": 0.6554172703105662,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a005",
+    "type": "answerable",
+    "top_score": 0.5409832865389483,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a006",
+    "type": "answerable",
+    "top_score": 0.6357373732826075,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a007",
+    "type": "answerable",
+    "top_score": 0.6160039036773812,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a008",
+    "type": "answerable",
+    "top_score": 0.6393071171749108,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a009",
+    "type": "answerable",
+    "top_score": 0.7162263969462085,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a010",
+    "type": "answerable",
+    "top_score": 0.6693316656013779,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a011",
+    "type": "answerable",
+    "top_score": 0.6148332384586985,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a012",
+    "type": "answerable",
+    "top_score": 0.6002091876335319,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a013",
+    "type": "answerable",
+    "top_score": 0.6160377336532264,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a014",
+    "type": "answerable",
+    "top_score": 0.691332072023931,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a015",
+    "type": "answerable",
+    "top_score": 0.6652845728660669,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a016",
+    "type": "answerable",
+    "top_score": 0.60545396729255,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a017",
+    "type": "answerable",
+    "top_score": 0.6316155875519541,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a018",
+    "type": "answerable",
+    "top_score": 0.5962211151962336,
+    "found@4": false
+  },
+  {
+    "id": "kb1-a019",
+    "type": "answerable",
+    "top_score": 0.6577844322530745,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a020",
+    "type": "answerable",
+    "top_score": 0.6109824234188443,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a021",
+    "type": "answerable",
+    "top_score": 0.643905809981448,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a022",
+    "type": "answerable",
+    "top_score": 0.6456380654638809,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a023",
+    "type": "answerable",
+    "top_score": 0.6364419006357749,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a024",
+    "type": "answerable",
+    "top_score": 0.6055459261150827,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a025",
+    "type": "answerable",
+    "top_score": 0.6724723028408399,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a026",
+    "type": "answerable",
+    "top_score": 0.6301851747415952,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a027",
+    "type": "answerable",
+    "top_score": 0.6128145976819769,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a028",
+    "type": "answerable",
+    "top_score": 0.623544804704315,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a029",
+    "type": "answerable",
+    "top_score": 0.6119709917888607,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a030",
+    "type": "answerable",
+    "top_score": 0.6479475408138832,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a031",
+    "type": "answerable",
+    "top_score": 0.6720719426891767,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a032",
+    "type": "answerable",
+    "top_score": 0.6617008355475914,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a033",
+    "type": "answerable",
+    "top_score": 0.6469287964069261,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a034",
+    "type": "answerable",
+    "top_score": 0.6413336795037831,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a035",
+    "type": "answerable",
+    "top_score": 0.6202506968767826,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a036",
+    "type": "answerable",
+    "top_score": 0.6401015064629098,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a037",
+    "type": "answerable",
+    "top_score": 0.6297013705185701,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a038",
+    "type": "answerable",
+    "top_score": 0.6529660336016968,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a039",
+    "type": "answerable",
+    "top_score": 0.6545597537319019,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a040",
+    "type": "answerable",
+    "top_score": 0.6331333283467139,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a041",
+    "type": "answerable",
+    "top_score": 0.5766031545807416,
+    "found@4": false
+  },
+  {
+    "id": "kb1-a042",
+    "type": "answerable",
+    "top_score": 0.6852179882505487,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a043",
+    "type": "answerable",
+    "top_score": 0.6943352591943311,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a044",
+    "type": "answerable",
+    "top_score": 0.6417435315470291,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a045",
+    "type": "answerable",
+    "top_score": 0.5847012556140441,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a046",
+    "type": "answerable",
+    "top_score": 0.6872277721559927,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a047",
+    "type": "answerable",
+    "top_score": 0.6564653160366216,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a048",
+    "type": "answerable",
+    "top_score": 0.553698561207929,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a049",
+    "type": "answerable",
+    "top_score": 0.5959648223923232,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a050",
+    "type": "answerable",
+    "top_score": 0.6464290933727572,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a051",
+    "type": "answerable",
+    "top_score": 0.6685989499459938,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a052",
+    "type": "answerable",
+    "top_score": 0.6393650573646062,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a053",
+    "type": "answerable",
+    "top_score": 0.584038851952776,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a054",
+    "type": "answerable",
+    "top_score": 0.7395674387721874,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a055",
+    "type": "answerable",
+    "top_score": 0.6948231534046739,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a056",
+    "type": "answerable",
+    "top_score": 0.6424036478967902,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a057",
+    "type": "answerable",
+    "top_score": 0.6635164648405814,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a058",
+    "type": "answerable",
+    "top_score": 0.6638228982873731,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a059",
+    "type": "answerable",
+    "top_score": 0.7275039059859033,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a060",
+    "type": "answerable",
+    "top_score": 0.6699664044045479,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a061",
+    "type": "answerable",
+    "top_score": 0.6184112742179452,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a062",
+    "type": "answerable",
+    "top_score": 0.6159575628975228,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a063",
+    "type": "answerable",
+    "top_score": 0.5858265381933339,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a064",
+    "type": "answerable",
+    "top_score": 0.6499628755786485,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a065",
+    "type": "answerable",
+    "top_score": 0.5937676978664803,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a066",
+    "type": "answerable",
+    "top_score": 0.6465579064487644,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a067",
+    "type": "answerable",
+    "top_score": 0.6067548907710261,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a068",
+    "type": "answerable",
+    "top_score": 0.6969662851040058,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a069",
+    "type": "answerable",
+    "top_score": 0.7002107423546617,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a070",
+    "type": "answerable",
+    "top_score": 0.601406078963052,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a071",
+    "type": "answerable",
+    "top_score": 0.6607953380547139,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a072",
+    "type": "answerable",
+    "top_score": 0.6269149679970969,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a073",
+    "type": "answerable",
+    "top_score": 0.6355579073184986,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a074",
+    "type": "answerable",
+    "top_score": 0.5933893837964047,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a075",
+    "type": "answerable",
+    "top_score": 0.5296930396606289,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a076",
+    "type": "answerable",
+    "top_score": 0.6131345983502973,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a077",
+    "type": "answerable",
+    "top_score": 0.6465850759551695,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a078",
+    "type": "answerable",
+    "top_score": 0.6136546443214452,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a079",
+    "type": "answerable",
+    "top_score": 0.6322028551647821,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a080",
+    "type": "answerable",
+    "top_score": 0.775861018321232,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a081",
+    "type": "answerable",
+    "top_score": 0.5579358099680394,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a082",
+    "type": "answerable",
+    "top_score": 0.5982714801654998,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a083",
+    "type": "answerable",
+    "top_score": 0.5422779540475965,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a084",
+    "type": "answerable",
+    "top_score": 0.6794306223901998,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a085",
+    "type": "answerable",
+    "top_score": 0.6723130132139827,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a086",
+    "type": "answerable",
+    "top_score": 0.6795141176467012,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a087",
+    "type": "answerable",
+    "top_score": 0.5981288799986877,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a088",
+    "type": "answerable",
+    "top_score": 0.520991796425657,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a089",
+    "type": "answerable",
+    "top_score": 0.63648252377069,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a090",
+    "type": "answerable",
+    "top_score": 0.6569522610766726,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a091",
+    "type": "answerable",
+    "top_score": 0.6316156609467705,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a092",
+    "type": "answerable",
+    "top_score": 0.5895436854444417,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a093",
+    "type": "answerable",
+    "top_score": 0.5527242261800828,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a094",
+    "type": "answerable",
+    "top_score": 0.6124872509373934,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a095",
+    "type": "answerable",
+    "top_score": 0.6191829888649772,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a096",
+    "type": "answerable",
+    "top_score": 0.6104941323826011,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a097",
+    "type": "answerable",
+    "top_score": 0.5792807399031435,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a098",
+    "type": "answerable",
+    "top_score": 0.620273542976184,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a099",
+    "type": "answerable",
+    "top_score": 0.6263189202065269,
+    "found@4": true
+  },
+  {
+    "id": "kb1-a100",
+    "type": "answerable",
+    "top_score": 0.5865846943984054,
+    "found@4": true
+  },
+  {
+    "id": "kb1-u001",
+    "type": "unanswerable",
+    "top_score": 0.5519416361420482,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u002",
+    "type": "unanswerable",
+    "top_score": 0.4656970912101789,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u003",
+    "type": "unanswerable",
+    "top_score": 0.5071338639734362,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u004",
+    "type": "unanswerable",
+    "top_score": 0.5364141334671992,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u005",
+    "type": "unanswerable",
+    "top_score": 0.5193088569136707,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u006",
+    "type": "unanswerable",
+    "top_score": 0.38697604875917224,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u007",
+    "type": "unanswerable",
+    "top_score": 0.5515965079692221,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u008",
+    "type": "unanswerable",
+    "top_score": 0.5163376371117403,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u009",
+    "type": "unanswerable",
+    "top_score": 0.49714884644353724,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u010",
+    "type": "unanswerable",
+    "top_score": 0.5419208851297838,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u011",
+    "type": "unanswerable",
+    "top_score": 0.5988716763801798,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u012",
+    "type": "unanswerable",
+    "top_score": 0.5894899102913715,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u013",
+    "type": "unanswerable",
+    "top_score": 0.4515326371721603,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u014",
+    "type": "unanswerable",
+    "top_score": 0.5823652983293659,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u015",
+    "type": "unanswerable",
+    "top_score": 0.6129214941343116,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u016",
+    "type": "unanswerable",
+    "top_score": 0.5489868459760276,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u017",
+    "type": "unanswerable",
+    "top_score": 0.4873102249686956,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u018",
+    "type": "unanswerable",
+    "top_score": 0.5894200217499499,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u019",
+    "type": "unanswerable",
+    "top_score": 0.5662624690068334,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u020",
+    "type": "unanswerable",
+    "top_score": 0.5604744115035686,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u021",
+    "type": "unanswerable",
+    "top_score": 0.625180074264268,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u022",
+    "type": "unanswerable",
+    "top_score": 0.5531655232260518,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u023",
+    "type": "unanswerable",
+    "top_score": 0.49841352133000455,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u024",
+    "type": "unanswerable",
+    "top_score": 0.46032682005194075,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u025",
+    "type": "unanswerable",
+    "top_score": 0.5737385113280024,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u026",
+    "type": "unanswerable",
+    "top_score": 0.5793782495354681,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u027",
+    "type": "unanswerable",
+    "top_score": 0.5167917097695099,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u028",
+    "type": "unanswerable",
+    "top_score": 0.6312983374772856,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u029",
+    "type": "unanswerable",
+    "top_score": 0.6201770609368742,
+    "found@4": false
+  },
+  {
+    "id": "kb1-u030",
+    "type": "unanswerable",
+    "top_score": 0.5218258570146304,
+    "found@4": false
+  }
+]

@@ -123,6 +123,10 @@ async def test_retries_429_then_succeeds() -> None:
         return httpx.Response(200, content=sse(delta("fine"), "[DONE]"))
 
     assert (await collect(client(handler)))[0] == "fine" and calls["n"] == 3
+    c = client(handler)
+    calls["n"] = 0
+    first = next(iter([ev async for ev in c.stream([], max_tokens=5, temperature=0) if ev.token]))
+    assert first.wait_s >= 0.02  # two 10 ms retry-after waits reported on the first token
 
 
 async def test_gives_up_after_max_retries() -> None:

@@ -48,6 +48,9 @@ class Usage:
 class LLMEvent:
     token: str | None = None
     usage: Usage | None = None
+    # On the first token: seconds spent waiting on rate limits / retries before the request
+    # that succeeded (so TTFT can be reported without queueing time).
+    wait_s: float = 0.0
 
 
 class LLMClient(Protocol):
@@ -145,6 +148,7 @@ class OpenAICompatibleClient:
     ) -> AsyncIterator[LLMEvent]:
         body = self.request_body(messages, max_tokens=max_tokens, temperature=temperature)
         attempt = 0
+        waited = 0.0
         while True:
             started = False
             try:
@@ -159,6 +163,7 @@ class OpenAICompatibleClient:
                                 "LLM %s, retry %d in %.1fs", resp.status_code, attempt + 1, wait
                             )
                             attempt += 1
+                            waited += wait
                             await asyncio.sleep(wait)
                             continue
                         raise LLMUnavailableError(
@@ -174,8 +179,9 @@ class OpenAICompatibleClient:
                         if event.token:
                             text = think.feed(event.token)
                             if text:
+                                first = not started
                                 started = True
-                                yield LLMEvent(token=text)
+                                yield LLMEvent(token=text, wait_s=waited if first else 0.0)
                         if event.usage:
                             yield event
                     return
@@ -185,6 +191,7 @@ class OpenAICompatibleClient:
                 wait = min(self._retry_base * 2**attempt, self._retry_max)
                 logger.warning("LLM transport error %r, retry %d in %.1fs", exc, attempt + 1, wait)
                 attempt += 1
+                waited += wait
                 await asyncio.sleep(wait)
 
     async def ping(self) -> None:

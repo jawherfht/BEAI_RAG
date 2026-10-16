@@ -1,6 +1,8 @@
 """rag-api settings (pydantic-settings). Every value comes from the environment."""
 
+import json
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated, Literal
 
 from pydantic import Field, SecretStr, field_validator, model_validator
@@ -79,6 +81,25 @@ class Settings(CoreSettings):
             return [a.strip() for a in v.strip("[]").replace('"', "").split(",") if a.strip()]
         return v
 
+    # Calibrated thresholds (eval/calibrate.py). Default: config/thresholds.<embed model>.json,
+    # looked up from the working directory upwards. Explicit env values still win.
+    thresholds_file: str | None = None
+    thresholds_source: str = "defaults"
+
+    @model_validator(mode="after")
+    def _load_thresholds(self) -> "Settings":
+        path = _find_thresholds_file(self.thresholds_file, self.embed_model)
+        if path is None:
+            return self
+        data = json.loads(path.read_text())
+        if data.get("embed_model") not in (None, self.embed_model):
+            return self  # calibrated for another model: ignore
+        for key in ("score_threshold", "conf_mid", "conf_high"):
+            if key not in self.model_fields_set and key in data:
+                object.__setattr__(self, key, float(data[key]))
+        object.__setattr__(self, "thresholds_source", str(path))
+        return self
+
     @model_validator(mode="after")
     def _check(self) -> "Settings":
         if not self.score_threshold <= self.conf_mid <= self.conf_high:
@@ -87,9 +108,25 @@ class Settings(CoreSettings):
             raise ValueError("re-ranker thresholds must be ordered like the dense ones")
         if self.environment == "prod" and self.jwt_secret is not None:
             raise ValueError("JWT_SECRET (HS256) is for dev/test only; use JWT_PUBLIC_KEY in prod")
-        if any(a.startswith("HS") for a in self.jwt_algorithms) and self.jwt_secret is None:
-            raise ValueError("HS* algorithms require JWT_SECRET")
+        if any(a.startswith("HS") for a in self.jwt_algorithms):
+            if self.jwt_secret is None:
+                raise ValueError("HS* algorithms require JWT_SECRET")
+            if len(self.jwt_secret.get_secret_value().encode()) < 32:
+                raise ValueError("JWT_SECRET must be at least 32 bytes (RFC 7518 3.2)")
         return self
+
+
+def _find_thresholds_file(explicit: str | None, embed_model: str) -> Path | None:
+    if explicit:
+        p = Path(explicit)
+        return p if p.is_file() else None
+    name = f"thresholds.{embed_model.rsplit('/', 1)[-1]}.json"
+    here = Path.cwd()
+    for folder in (here, *here.parents[:3]):
+        candidate = folder / "config" / name
+        if candidate.is_file():
+            return candidate
+    return None
 
 
 @lru_cache

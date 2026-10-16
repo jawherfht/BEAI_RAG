@@ -20,7 +20,7 @@ Codes in use: `unauthorized` (401), `not_found` (404), `conflict` (409),
 | Method & path | Response |
 |---|---|
 | `GET /healthz` | `200 {"status": "ok"}` — process is alive |
-| `GET /readyz` | `200` or `503` `{"status": "ok"\|"unavailable", "checks": {"embedder"\|"qdrant"\|"postgres"\|"redis"\|"rabbitmq"\|"object_storage"[\|"reranker"]: {"ok": bool, "latency_ms": float, "error"?: str}}}` (`reranker` when `READINESS_CHECK_RERANKER=true`) |
+| `GET /readyz` | `200` or `503` `{"status": "ok"\|"unavailable", "checks": {"embedder"\|"qdrant"\|"postgres"\|"redis"\|"rabbitmq"\|"object_storage"\|"llm"[\|"reranker"]: {"ok": bool, "latency_ms": float, "error"?: str}}}` (`reranker` when `READINESS_CHECK_RERANKER=true`) |
 | `GET /metrics` | Prometheus text format |
 
 ## Knowledge base (Phase 2)
@@ -45,7 +45,40 @@ Codes in use: `unauthorized` (401), `not_found` (404), `conflict` (409),
 A source id from another tenant or agent is always `404`. `503 service_unavailable` when the
 job could not be queued (the source then shows the error and can be retried).
 
-## Planned (spec section 7)
-`/test`, `/answer`
-(SSE), `/ws`, and the gRPC `RagService` ([`proto/beai/rag/v1/rag.proto`](../proto/beai/rag/v1/rag.proto))
-are added in Phases 3–4 and documented here as they land.
+## Answering (Phase 4)
+
+Request body for `/test`, `/answer` and WebSocket messages (the tenant and agent come from auth):
+
+```json
+{"question": "What's your return policy?",
+ "language": "en",
+ "persona": {"agent_name": "Acme", "role": "store assistant", "instructions": "", "tone": "warm",
+             "response_style": "concise", "boundaries": "only store topics"},
+ "conversation_history": [{"role": "user", "text": "..."}, {"role": "assistant", "text": "..."}]}
+```
+
+| Method & path | Response |
+|---|---|
+| `POST /v1/agents/{agent_id}/test` | `200 {answer, spoken_text, sources: [{file_name, page, section, url, snippet, score}], confidence: high\|medium\|low, fallback, latency_ms: {embed, search, rerank, llm_ttft, llm_total, total[, llm_rate_limit_wait, cache]}, cache_hit, error}` |
+| `POST /v1/agents/{agent_id}/answer` | `200 text/event-stream`: `event: token` `{text, spoken}` …, `event: sources` `{sources}`, `event: done` (same object as `/test`). Errors before streaming (404 no knowledge base / foreign agent) are normal JSON errors. |
+| `WS /v1/agents/{agent_id}/ws` | Auth: `Authorization: Bearer`, `X-API-Key`, or `?access_token=`. Send the request JSON; receive `{"type": "token"\|"sources"\|"done"\|"error", ...}`. Several questions per connection. Close codes 4401 (credentials), 4404 (agent). |
+
+`fallback: true` with `confidence: "low"` and no sources means the knowledge base does not answer
+the question (the LLM is not called when retrieval is below the threshold). `error:
+"llm_unavailable"` means the LLM could not be reached after retries; the fallback message is
+returned.
+
+## gRPC (Phase 4)
+
+`proto/beai/rag/v1/rag.proto`, service `RagService` on `GRPC_PORT` (50051): `Retrieve`,
+`Answer` (server stream: `token` chunks then one `final`), `GetKnowledgeBaseStatus`. Metadata
+`x-beai-tenant-id` and `x-beai-agent-id` (UUIDs) are required (`UNAUTHENTICATED` otherwise);
+an agent without a knowledge base in that tenant is `NOT_FOUND`. The server requires mTLS
+(`GRPC_TLS_CERT`, `GRPC_TLS_KEY`, `GRPC_CLIENT_CA`); `GRPC_ALLOW_INSECURE=true` is dev only.
+Regenerate code with `make proto`.
+
+## Usage events
+
+One message per answer on the durable queue `usage.events`:
+`{"type": "rag.answer", "tenant_id", "agent_id", "tokens_in", "tokens_out", "rerank_used",
+"fallback", "llm_model", "ts"}`.

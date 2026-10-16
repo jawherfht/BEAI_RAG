@@ -17,7 +17,7 @@ from pathlib import Path
 HERE = Path(__file__).parent
 sys.path[:0] = [str(HERE), str(HERE.parent)]
 
-from facts import FACTS, Fact  # type: ignore[import-not-found]  # noqa: E402
+from facts import FACTS, UNANSWERABLE, Fact  # type: ignore[import-not-found]  # noqa: E402
 from make_returns_policy_pdf import build as build_pdf  # type: ignore[import-not-found]  # noqa: E402
 
 TITLES = {
@@ -75,7 +75,10 @@ def write_txt(doc: str) -> None:
 
 
 def main() -> None:
+    only_questions = "--questions-only" in sys.argv
     for doc in TITLES:
+        if only_questions:
+            break
         {".pdf": write_pdf, ".docx": write_docx, ".md": write_md, ".txt": write_txt}[
             Path(doc).suffix
         ](doc)
@@ -90,7 +93,16 @@ def main() -> None:
                 "answer": f.sentence,
             }
             out.write(json.dumps(row, ensure_ascii=False) + "\n")
-    print(f"wrote {len(TITLES)} documents and {len(FACTS)} questions to {HERE}")
+        for i, q in enumerate(UNANSWERABLE, start=1):
+            row = {
+                "id": f"kb1-u{i:03d}",
+                "type": "unanswerable",
+                "question": q,
+                "gold": None,
+                "evidence": None,
+            }
+            out.write(json.dumps(row, ensure_ascii=False) + "\n")
+    print(f"wrote {len(TITLES)} documents and {len(FACTS) + len(UNANSWERABLE)} questions to {HERE}")
 
 
 if __name__ == "__main__":

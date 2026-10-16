@@ -85,6 +85,21 @@ question ─► cache (tenant|agent|kb_version|normalised q) ─hit─► result
 `app/services/retrieval.py` (KB settings + cache + retriever, used by `/test`, `/answer` and
 gRPC in Phase 4). `/readyz` now also checks the embedder.
 
+## Implemented in Phase 4 — generation
+See [ADR 0009](decisions/0009-generation.md).
+
+```
+/test · /answer (SSE) · /ws · gRPC Answer
+  └─ AnswerService: answer cache ─hit─► replay
+       └► retrieval (Phase 3) ─below threshold─► fallback message (LLM not called)
+       └► prompt (persona + grounding rules + numbered CONTEXT) ─► LLM stream (OpenAI-compatible:
+          vLLM in prod, Groq in dev; thinking off; 429 retry) ─► tokens {text, spoken}
+       └► citations [n] → sources; fallback / no-citation checks; confidence
+       └► cache · usage.events · sampled PII-scrubbed answers_log · metrics (background)
+```
+
+Thresholds come from `config/thresholds.<embed model>.json` (`eval/calibrate.py`).
+
 ## Latency rules (all phases)
 Nothing slow on the live path: parsing, crawling, chunking, embedding are async via RabbitMQ.
 Retrieval budget ≤ 60 ms p95; LLM TTFT ≤ 500 ms p95 (spec section 1.4).

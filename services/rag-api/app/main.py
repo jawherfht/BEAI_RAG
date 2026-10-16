@@ -17,6 +17,13 @@ from app.telemetry.metrics import install_http_metrics
 def create_app(settings: Settings | None = None, models: ModelOverrides | None = None) -> FastAPI:
     settings = settings or get_settings()
     logging.basicConfig(level=settings.log_level)
+    logging.getLogger(__name__).info(
+        "grounding thresholds %.3f / %.3f / %.3f from %s",
+        settings.score_threshold,
+        settings.conf_mid,
+        settings.conf_high,
+        settings.thresholds_source,
+    )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:

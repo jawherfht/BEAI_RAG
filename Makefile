@@ -5,7 +5,7 @@ RUN := $(UV) run
 API_DIR := services/rag-api
 INFRA := qdrant postgres redis rabbitmq seaweedfs
 
-.PHONY: help up down logs install migrate bootstrap run-api run-worker run-embedder phase2-check eval-retrieval kb1-data sample-data lint format typecheck test test-unit test-integration readyz show-collection phase1-check seed demo eval licenses openapi proto
+.PHONY: help up down logs install migrate bootstrap run-api run-worker run-embedder phase2-check phase4-check calibrate eval-retrieval kb1-data sample-data lint format typecheck test test-unit test-integration readyz show-collection phase1-check seed demo eval licenses openapi proto
 
 help:
 	@grep -E '^[a-z0-9-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-18s %s\n", $$1, $$2}'
@@ -64,6 +64,12 @@ phase2-check: ## Phase 2 acceptance with real models (needs TEI + Hugging Face a
 
 run-embedder: ## CPU embedding server on :8080 (TEI /embed contract; EMBED_PROVIDER=local)
 	cd services/embed-server && $(RUN) uvicorn --factory embed_server.main:create_app --port 8080
+
+phase4-check: ## Phase 4 acceptance: /test sample question, fallback without LLM, TTFT
+	$(RUN) python scripts/phase4_check.py
+
+calibrate: ## Calibrate grounding thresholds on KB #1 -> config/thresholds.<model>.json
+	$(RUN) python eval/calibrate.py
 
 run-worker: ## Run the ingestion worker locally against the compose stack
 	cd services/ingestion-worker && $(RUN) python -m worker.main

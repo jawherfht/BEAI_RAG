@@ -840,3 +840,39 @@ FACTS: list[Fact] = [
 ]
 
 assert len(FACTS) == 100, len(FACTS)
+
+# Questions the KB #1 documents do NOT answer (expected: fallback). Some are near-misses on
+# purpose (same topic, missing detail) — the hardest case for the grounding threshold.
+UNANSWERABLE: list[str] = [
+    "Who is the CEO of Acme Retail?",
+    "Do you sell bicycles?",
+    "What is the weather like in Berlin today?",
+    "Can I pay with Bitcoin?",
+    "Do you have a store in Madrid?",
+    "What is the capital of Australia?",
+    "How many employees does Acme have?",
+    "Do you offer a military discount?",
+    "Can I book a personal styling appointment?",
+    "Do you have a store in Vienna?",
+    "Is there a mobile app for Acme?",
+    "Do you ship to Japan?",
+    "What is your company's annual revenue?",
+    "Can I rent shoes for a wedding?",
+    "Do you buy back used shoes?",
+    "How do I apply for a job at Acme?",
+    "Do you sell children's clothing?",
+    "Do gift cards work in other currencies like US dollars?",
+    "Can I reserve an item online and pay in store later?",
+    "What is the maximum weight for express parcels?",
+    "Do you offer installation for furniture you deliver to Spain?",
+    "Which charity does Acme donate to?",
+    "How do I unsubscribe from the newsletter?",
+    "Are your products vegan?",
+    "What is the warranty on sunglasses lenses?",
+    "Can I change the name on a gift card?",
+    "Can I trade in my old phone?",
+    "How do I clean patent leather?",
+    "What size is a European 47 in US sizes?",
+    "Is parking free at your stores?",
+]
+assert len(UNANSWERABLE) == 30

@@ -20,6 +20,7 @@ def make_settings(**overrides: Any) -> Settings:
         "s3_auto_create_bucket": False,
         "readiness_timeout_s": 0.5,
         "grpc_enabled": False,
+        "thresholds_file": "/nonexistent/thresholds.json",  # hermetic: no calibrated file
     }
     base.update(overrides)
     return Settings(_env_file=None, **base)

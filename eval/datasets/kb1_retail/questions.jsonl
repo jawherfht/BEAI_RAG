@@ -98,3 +98,33 @@
 {"id": "kb1-a098", "type": "answerable", "question": "Who pays shipping for a warranty claim?", "gold": {"file_name": "warranty.txt", "page": 1, "section": "Warranty"}, "evidence": "covered by Acme", "answer": "Shipping costs for warranty claims are covered by Acme."}
 {"id": "kb1-a099", "type": "answerable", "question": "Is a product bought second-hand covered by warranty?", "gold": {"file_name": "warranty.txt", "page": 1, "section": "Warranty"}, "evidence": "second-hand from other customers are not covered", "answer": "Items bought second-hand from other customers are not covered."}
 {"id": "kb1-a100", "type": "answerable", "question": "Does the warranty apply abroad?", "gold": {"file_name": "warranty.txt", "page": 1, "section": "Warranty"}, "evidence": "valid in all countries we ship to", "answer": "The warranty is valid in all countries we ship to."}
+{"id": "kb1-u001", "type": "unanswerable", "question": "Who is the CEO of Acme Retail?", "gold": null, "evidence": null}
+{"id": "kb1-u002", "type": "unanswerable", "question": "Do you sell bicycles?", "gold": null, "evidence": null}
+{"id": "kb1-u003", "type": "unanswerable", "question": "What is the weather like in Berlin today?", "gold": null, "evidence": null}
+{"id": "kb1-u004", "type": "unanswerable", "question": "Can I pay with Bitcoin?", "gold": null, "evidence": null}
+{"id": "kb1-u005", "type": "unanswerable", "question": "Do you have a store in Madrid?", "gold": null, "evidence": null}
+{"id": "kb1-u006", "type": "unanswerable", "question": "What is the capital of Australia?", "gold": null, "evidence": null}
+{"id": "kb1-u007", "type": "unanswerable", "question": "How many employees does Acme have?", "gold": null, "evidence": null}
+{"id": "kb1-u008", "type": "unanswerable", "question": "Do you offer a military discount?", "gold": null, "evidence": null}
+{"id": "kb1-u009", "type": "unanswerable", "question": "Can I book a personal styling appointment?", "gold": null, "evidence": null}
+{"id": "kb1-u010", "type": "unanswerable", "question": "Do you have a store in Vienna?", "gold": null, "evidence": null}
+{"id": "kb1-u011", "type": "unanswerable", "question": "Is there a mobile app for Acme?", "gold": null, "evidence": null}
+{"id": "kb1-u012", "type": "unanswerable", "question": "Do you ship to Japan?", "gold": null, "evidence": null}
+{"id": "kb1-u013", "type": "unanswerable", "question": "What is your company's annual revenue?", "gold": null, "evidence": null}
+{"id": "kb1-u014", "type": "unanswerable", "question": "Can I rent shoes for a wedding?", "gold": null, "evidence": null}
+{"id": "kb1-u015", "type": "unanswerable", "question": "Do you buy back used shoes?", "gold": null, "evidence": null}
+{"id": "kb1-u016", "type": "unanswerable", "question": "How do I apply for a job at Acme?", "gold": null, "evidence": null}
+{"id": "kb1-u017", "type": "unanswerable", "question": "Do you sell children's clothing?", "gold": null, "evidence": null}
+{"id": "kb1-u018", "type": "unanswerable", "question": "Do gift cards work in other currencies like US dollars?", "gold": null, "evidence": null}
+{"id": "kb1-u019", "type": "unanswerable", "question": "Can I reserve an item online and pay in store later?", "gold": null, "evidence": null}
+{"id": "kb1-u020", "type": "unanswerable", "question": "What is the maximum weight for express parcels?", "gold": null, "evidence": null}
+{"id": "kb1-u021", "type": "unanswerable", "question": "Do you offer installation for furniture you deliver to Spain?", "gold": null, "evidence": null}
+{"id": "kb1-u022", "type": "unanswerable", "question": "Which charity does Acme donate to?", "gold": null, "evidence": null}
+{"id": "kb1-u023", "type": "unanswerable", "question": "How do I unsubscribe from the newsletter?", "gold": null, "evidence": null}
+{"id": "kb1-u024", "type": "unanswerable", "question": "Are your products vegan?", "gold": null, "evidence": null}
+{"id": "kb1-u025", "type": "unanswerable", "question": "What is the warranty on sunglasses lenses?", "gold": null, "evidence": null}
+{"id": "kb1-u026", "type": "unanswerable", "question": "Can I change the name on a gift card?", "gold": null, "evidence": null}
+{"id": "kb1-u027", "type": "unanswerable", "question": "Can I trade in my old phone?", "gold": null, "evidence": null}
+{"id": "kb1-u028", "type": "unanswerable", "question": "How do I clean patent leather?", "gold": null, "evidence": null}
+{"id": "kb1-u029", "type": "unanswerable", "question": "What size is a European 47 in US sizes?", "gold": null, "evidence": null}
+{"id": "kb1-u030", "type": "unanswerable", "question": "Is parking free at your stores?", "gold": null, "evidence": null}

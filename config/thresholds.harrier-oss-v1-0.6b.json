@@ -1,0 +1,21 @@
+{
+  "embed_model": "microsoft/harrier-oss-v1-0.6b",
+  "embed_model_revision": "f9b9dc8d367d443f2479d27aa5d8d2850c0774ee",
+  "dataset": "kb1_retail",
+  "questions": {
+    "answerable": 100,
+    "unanswerable": 30
+  },
+  "calibrated_at": "2026-10-16T19:06:24+00:00",
+  "status": "preliminary (KB #1 only); full calibration in Phase 6",
+  "score_threshold": 0.553,
+  "conf_mid": 0.553,
+  "conf_high": 0.599,
+  "metrics": {
+    "false_fallback_answerable": 0.05,
+    "correct_fallback_unanswerable": 0.5667,
+    "precision_at_or_above_mid": 0.8611111111111112,
+    "precision_at_or_above_high": 0.9523809523809523,
+    "share_answerable_high": 0.8
+  }
+}

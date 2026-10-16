@@ -6,6 +6,7 @@ WORKDIR /src
 COPY pyproject.toml uv.lock ./
 COPY packages packages
 COPY services services
+COPY config config
 RUN uv sync --frozen --no-dev --package beai-rag-api
 ENV PATH=/opt/venv/bin:$PATH
 WORKDIR /src/services/rag-api
