@@ -100,6 +100,15 @@ See [ADR 0009](decisions/0009-generation.md).
 
 Thresholds come from `config/thresholds.<embed model>.json` (`eval/calibrate.py`).
 
+## Implemented in Phase 5 — screen B
+See [ADR 0010](decisions/0010-frontend.md). `web/knowledge-base-ui` (Next.js): browser →
+`/api/rag/*` (Next route handler, allow-listed paths, streams uploads and SSE, adds auth) →
+rag-api. Screen B sections: warning banner, sources ("Ground answers in": drop zone, + Add URL,
+Business info, status pills, delete, "3 files, 2 URLs"), retrieval settings (chunk size,
+top-k, fallback, hybrid / re-ranking / RAG toggles), "Test this agent" (streamed answer,
+`file p.N` chips with snippets, confidence badge, latency), Save & Continue → Persona Builder
+with `<KnowledgeBaseStatusChip>`. Screenshots: `docs/screens/`.
+
 ## Latency rules (all phases)
 Nothing slow on the live path: parsing, crawling, chunking, embedding are async via RabbitMQ.
 Retrieval budget ≤ 60 ms p95; LLM TTFT ≤ 500 ms p95 (spec section 1.4).

@@ -40,3 +40,10 @@ Decisions (product owner, 2026-10-15): **CPU-only torch** for the worker (no NVI
 Status of the CPU-only torch switch: **done (2026-10-15)**. The workspace resolves `torch` and
 `torchvision` from the explicit `pytorch-cpu` uv index (`torch 2.14.1+cpu`); `make licenses`
 lists no NVIDIA packages. Resolution is limited to linux x86_64/aarch64 and macOS.
+
+## Frontend (Phase 5, 2026-10-16) — one item to confirm
+- `@img/sharp-libvips-*` (LGPL-3.0): optional Next.js image optimiser. Not used
+  (`images.unoptimized`), removed from the Docker image; dev-only install.
+- `caniuse-lite` (CC-BY-4.0): browser support *data* used by browserslist at build time.
+  CC-BY allows commercial use with attribution (it is not the forbidden NC variant); attribution
+  in `web/knowledge-base-ui/THIRD_PARTY_NOTICES.md`. **To confirm by the product owner.**

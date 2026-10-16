@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #1f2430;
+  --color-muted: #5b6475;
+  --color-line: #e3e6ec;
+  --color-panel: #ffffff;
+  --color-canvas: #f5f6f8;
+  --color-brand: #3d4fd6;
+  --color-brand-ink: #ffffff;
+  --color-warn-bg: #fff6e0;
+  --color-warn-ink: #6b4b00;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html,
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}

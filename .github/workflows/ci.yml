@@ -58,6 +58,26 @@ jobs:
       - run: uv sync --frozen
       - run: uv run pytest -m integration
 
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web/knowledge-base-ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/knowledge-base-ui/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npx eslint . --max-warnings 0
+      - run: npx tsc --noEmit
+      - run: npx next build
+      - run: npm run licenses
+      # The E2E suite (npx playwright test) needs the full stack with models and an LLM;
+      # it runs with `make e2e` and joins CI with the GPU staging environment (Phase 7).
+
   proto:
     runs-on: ubuntu-latest
     steps:

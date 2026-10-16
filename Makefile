@@ -5,7 +5,7 @@ RUN := $(UV) run
 API_DIR := services/rag-api
 INFRA := qdrant postgres redis rabbitmq seaweedfs
 
-.PHONY: help up down logs install migrate bootstrap run-api run-worker run-embedder phase2-check phase4-check calibrate eval-retrieval kb1-data sample-data lint format typecheck test test-unit test-integration readyz show-collection phase1-check seed demo eval licenses openapi proto
+.PHONY: help up down logs install migrate bootstrap run-api run-worker run-embedder phase2-check phase4-check calibrate eval-retrieval kb1-data sample-data lint format typecheck test test-unit test-integration readyz show-collection phase1-check seed demo eval licenses openapi proto web-install web-check e2e stack-stop
 
 help:
 	@grep -E '^[a-z0-9-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-18s %s\n", $$1, $$2}'
@@ -98,3 +98,19 @@ proto: ## Regenerate gRPC code from proto/beai/rag/v1/rag.proto into app/grpc_ge
 	touch $(API_DIR)/app/grpc_gen/__init__.py $(API_DIR)/app/grpc_gen/beai/__init__.py \
 		$(API_DIR)/app/grpc_gen/beai/rag/__init__.py $(API_DIR)/app/grpc_gen/beai/rag/v1/__init__.py
 	sed -i 's/^from beai.rag.v1 import/from app.grpc_gen.beai.rag.v1 import/' $(API_DIR)/app/grpc_gen/beai/rag/v1/rag_pb2_grpc.py
+
+WEB := web/knowledge-base-ui
+
+web-install: ## Install the screen B (Next.js) dependencies
+	cd $(WEB) && npm ci --no-audit --no-fund
+
+web-check: ## Lint, type-check and build screen B
+	cd $(WEB) && npx eslint . --max-warnings 0 && npx tsc --noEmit && npx next build
+
+e2e: ## Playwright E2E for screen B against the real stack (make up first; needs LLM + models)
+	scripts/dev-stack.sh
+	cd $(WEB) && [ -f .env.local ] || cp .env.example .env.local
+	cd $(WEB) && npx next build && npx playwright test
+
+stack-stop: ## Stop rag-api, worker and embed-server started by scripts/dev-stack.sh
+	scripts/dev-stack.sh stop
