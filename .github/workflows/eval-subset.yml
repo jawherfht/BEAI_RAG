@@ -62,5 +62,6 @@ jobs:
           name: eval-subset-rows
           path: |
             eval/runs/*.c512-s10.jsonl
+            eval/ci/baseline.json
             embed-server.log
           if-no-files-found: ignore

@@ -54,12 +54,15 @@ def main(args: argparse.Namespace) -> int:
     n_ans = sum(is_answerable(r) for r in rows)
     print(f"{len(rows)} questions ({n_ans} answerable), gate `{gate.name}`")
     print(json.dumps(current, indent=2))
-    if args.update_baseline:
+    if args.update_baseline or not BASELINE.exists():
+        # First run (no baseline yet): record this run as the baseline. In CI it is printed
+        # and uploaded as an artifact so it can be committed; the next run compares against it.
         BASELINE.parent.mkdir(exist_ok=True)
         BASELINE.write_text(
             json.dumps({"tag": args.tag, "gate": gate.name, **current}, indent=2) + "\n"
         )
-        print(f"wrote {BASELINE}")
+        print(f"wrote {BASELINE} (no comparison on this run):")
+        print(BASELINE.read_text())
         return 0
     base = json.loads(BASELINE.read_text())
     failed = []

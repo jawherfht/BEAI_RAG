@@ -105,7 +105,9 @@ def plan(args: argparse.Namespace) -> tuple[Path, list[dict[str, Any]], int, int
     questions = load_questions(args.kb)
     if args.subset:
         questions = stratified(questions, args.subset)
-    tag = run_tag(args.chunk, args.rerank, args.subset, args.label)
+    tag = run_tag(
+        args.chunk, args.rerank, args.subset, args.label + ("nollm" if args.no_llm else "")
+    )
     RUNS.mkdir(exist_ok=True)
     out = RUNS / f"{args.kb}.{tag}.jsonl"
     done = set()
@@ -162,7 +164,12 @@ async def run(args: argparse.Namespace, out: Path, todo: list[dict[str, Any]], n
                 else:
                     rr = await r.reranker.rerank(q["question"], [c.text for c in top4])
                 rerank4_ms = (time.perf_counter() - t_rr) * 1000
-                body = await ask(s, q["question"])
+                # --no-llm: retrieval and grounding signals only (no /test call, no LLM tokens).
+                body = (
+                    await ask(s, q["question"])
+                    if not args.no_llm
+                    else {"answer": "", "fallback": None, "sources": [], "error": "no_llm"}
+                )
                 lat = body.get("latency_ms") or {}
                 row = {
                     "id": q["id"],
@@ -213,6 +220,7 @@ if __name__ == "__main__":
     p.add_argument("--chunk", type=int, default=512)
     p.add_argument("--rerank", action="store_true", help="re-rank 50 candidates on the live path")
     p.add_argument("--subset", type=int, default=0, help="stratified subset of n questions")
+    p.add_argument("--no-llm", action="store_true", help="skip /test (retrieval signals only)")
     p.add_argument("--label", default="", help="suffix for the run tag (e.g. a model name)")
     args = p.parse_args()
     out, todo, n_done, n_total = plan(args)
