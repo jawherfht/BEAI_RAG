@@ -92,7 +92,9 @@ async def ask(s: Session, question: str, attempts: int = 4) -> dict[str, Any]:
         if body.get("error") != "llm_unavailable":
             return body
         await asyncio.sleep(30 * (attempt + 1))  # quota window; the client already retried
-    return body
+    # Still unavailable (e.g. Groq's daily token cap): stop without writing a row, so a rerun
+    # resumes at this question instead of recording an LLM outage as an answer.
+    raise SystemExit(f"LLM unavailable after {attempts} attempts; rerun later to resume")
 
 
 def run_tag(chunk: int, rerank: bool, subset: int, label: str = "") -> str:
