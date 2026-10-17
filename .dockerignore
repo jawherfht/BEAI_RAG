@@ -1,0 +1,20 @@
+# Keep build contexts small (Windows local mode builds from the repo root).
+.git
+**/.venv
+**/__pycache__
+**/*.pyc
+**/.mypy_cache
+**/.ruff_cache
+**/.pytest_cache
+**/node_modules
+**/.next
+web/knowledge-base-ui/test-results
+web/knowledge-base-ui/playwright-report
+.stack-logs
+.env
+.env.*
+!.env.example
+!.env.windows.example
+eval/runs
+eval/datasets/bench
+docs/screens

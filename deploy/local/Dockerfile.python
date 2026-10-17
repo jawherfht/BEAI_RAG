@@ -1,0 +1,26 @@
+# syntax=docker/dockerfile:1
+# Local mode (docker-compose.windows.yml): ONE image for every Python service (rag-api,
+# ingestion-worker, embed-server, migrations), so CPU torch is downloaded and stored once.
+# Production keeps the slim per-service images (services/*/Dockerfile).
+FROM python:3.12-slim
+# Optional build secret "extra_ca": a CA bundle for TLS-intercepting proxies (corporate
+# networks, CI sandboxes). Not needed on a normal PC.
+RUN --mount=type=secret,id=extra_ca,required=false \
+    if [ -s /run/secrets/extra_ca ]; then export PIP_CERT=/run/secrets/extra_ca; fi \
+    && pip install --no-cache-dir uv==0.11.32
+ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_NO_CACHE=1 UV_PROJECT_ENVIRONMENT=/opt/venv
+WORKDIR /src
+COPY pyproject.toml uv.lock ./
+COPY packages packages
+COPY services services
+COPY config config
+# Workspace root depends on all four members: one environment with everything (CPU-only torch).
+RUN --mount=type=secret,id=extra_ca,required=false \
+    if [ -s /run/secrets/extra_ca ]; then export SSL_CERT_FILE=/run/secrets/extra_ca UV_NATIVE_TLS=1; fi \
+    && uv sync --frozen --no-dev
+ENV PATH=/opt/venv/bin:$PATH \
+    HF_HOME=/models/hf \
+    FASTEMBED_CACHE_PATH=/models/fastembed \
+    PYTHONUNBUFFERED=1
+RUN useradd --uid 10001 --create-home app && mkdir -p /models && chown app /models
+USER app

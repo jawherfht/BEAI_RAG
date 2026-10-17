@@ -102,6 +102,7 @@ class OpenAICompatibleClient:
         api_key: str | None = None,
         disable_thinking: bool = True,
         thinking_switch: ThinkingSwitch = "chat_template_kwargs",
+        reasoning_effort: str = "none",
         timeout_s: float = 30.0,
         max_retries: int = 4,
         retry_base_s: float = 1.0,
@@ -117,6 +118,7 @@ class OpenAICompatibleClient:
         self._model = model
         self._disable_thinking = disable_thinking
         self._switch = thinking_switch
+        self._reasoning_effort = reasoning_effort
         self._max_retries = max_retries
         self._retry_base = retry_base_s
         self._retry_max = retry_max_wait_s
@@ -140,7 +142,7 @@ class OpenAICompatibleClient:
             if self._switch == "chat_template_kwargs":
                 body["chat_template_kwargs"] = {"enable_thinking": False}
             elif self._switch == "reasoning_effort":
-                body["reasoning_effort"] = "none"
+                body["reasoning_effort"] = self._reasoning_effort
         return body
 
     async def stream(

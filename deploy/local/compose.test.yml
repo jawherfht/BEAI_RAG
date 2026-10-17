@@ -1,0 +1,52 @@
+# Test-only override for docker-compose.windows.yml (CI sandboxes / offline smoke tests):
+#   EXTRA_CA_FILE=/path/ca.crt docker compose -f docker-compose.windows.yml \
+#     -f deploy/local/compose.test.yml up -d --build
+# - mock-llm replaces the real LLM (no key, no quota);
+# - EXTRA_CA_FILE: CA bundle of a TLS-intercepting proxy, for builds and model downloads.
+# Sandbox builds: host network + the session's HTTPS proxy (predefined build args).
+x-build: &build
+  network: host
+  secrets: [extra_ca]
+  args:
+    HTTPS_PROXY: ${HTTPS_PROXY:-}
+    HTTP_PROXY: ${HTTPS_PROXY:-}
+    NO_PROXY: localhost,127.0.0.1
+
+x-ca-env: &ca
+  SSL_CERT_FILE: /etc/extra-ca.crt
+  REQUESTS_CA_BUNDLE: /etc/extra-ca.crt
+  CURL_CA_BUNDLE: /etc/extra-ca.crt
+  LLM_BASE_URL: http://mock-llm:8001/v1
+  LLM_MODEL: mock-llm
+  LLM_THINKING_SWITCH: "none"
+  HF_HUB_OFFLINE: "1"  # sandbox: models pre-seeded into the "models" volume
+
+services:
+  mock-llm:
+    image: python:3.12-slim
+    command: ["python", "/app/mock_llm.py"]
+    volumes: ["./deploy/local/mock_llm.py:/app/mock_llm.py:ro"]
+
+  embed-server:
+    build: *build
+    environment: *ca
+    volumes: ["${EXTRA_CA_FILE}:/etc/extra-ca.crt:ro"]
+  migrate:
+    build: *build
+    environment: *ca
+    volumes: ["${EXTRA_CA_FILE}:/etc/extra-ca.crt:ro"]
+  rag-api:
+    build: *build
+    environment: *ca
+    volumes: ["${EXTRA_CA_FILE}:/etc/extra-ca.crt:ro"]
+    depends_on: [mock-llm]
+  ingestion-worker:
+    build: *build
+    environment: *ca
+    volumes: ["${EXTRA_CA_FILE}:/etc/extra-ca.crt:ro"]
+  web:
+    build: *build
+
+secrets:
+  extra_ca:
+    file: ${EXTRA_CA_FILE}

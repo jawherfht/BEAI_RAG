@@ -63,6 +63,9 @@ class CoreSettings(BaseSettings):
     llm_thinking_switch: Literal["chat_template_kwargs", "reasoning_effort", "none"] = (
         "chat_template_kwargs"
     )
+    # Value sent with LLM_THINKING_SWITCH=reasoning_effort: "none" turns thinking off (Groq,
+    # Gemini 2.5 Flash); Gemini 3 models cannot turn it off, use "low" (ADR 0009).
+    llm_reasoning_effort: Literal["none", "minimal", "low", "medium", "high"] = "none"
     llm_timeout_s: float = Field(default=30.0, gt=0)
     llm_max_retries: int = Field(default=4, ge=0)  # 429 / 5xx / connect errors before 1st token
     llm_retry_base_s: float = Field(default=1.0, gt=0)

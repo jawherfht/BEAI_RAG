@@ -164,3 +164,15 @@ async def test_api_key_sent_when_configured() -> None:
     )
     await collect(c)
     assert seen["auth"] == "Bearer k123"
+
+
+def test_reasoning_effort_level_is_configurable() -> None:
+    # Gemini 3 cannot turn thinking off: LLM_REASONING_EFFORT=low.
+    c = OpenAICompatibleClient(
+        "http://llm/v1",
+        "gemini-3.8-flash",
+        thinking_switch="reasoning_effort",
+        reasoning_effort="low",
+    )
+    body = c.request_body([{"role": "user", "content": "hi"}], max_tokens=10, temperature=0.2)
+    assert body["reasoning_effort"] == "low"

@@ -17,6 +17,13 @@ for contributors and agents are in [`CLAUDE.md`](CLAUDE.md).
 | 6 Evaluation | datasets, calibration, reports | not started |
 | 7 Hardening | observability, security, Helm, load tests | not started |
 
+## Local mode on Windows (Docker only)
+
+Only Docker Desktop and Git needed: `docker compose -f docker-compose.windows.yml up -d --build`
+starts the infrastructure, migrations, rag-api, worker, CPU embed-server and screen B on
+http://localhost:3000 (LLM: Gemini via Google AI Studio, or Groq; key in your local `.env`).
+Step-by-step guide in French: **[docs/run-on-windows.md](docs/run-on-windows.md)**.
+
 ## Quick start (dev)
 
 Requirements: Docker with Compose v2, [uv](https://docs.astral.sh/uv/), GNU make.
@@ -54,6 +61,7 @@ docs/                     architecture, API, ADRs (docs/decisions)
 
 ## Documentation
 - **[Before production](docs/before-production.md)** — GPU items still to confirm
+- **[Run on Windows](docs/run-on-windows.md)** — local Docker mode, step by step (FR)
 - [Architecture](docs/architecture.md)
 - [API](docs/api.md) (OpenAPI: [`docs/openapi.json`](docs/openapi.json))
 - [Decisions (ADRs)](docs/decisions/)

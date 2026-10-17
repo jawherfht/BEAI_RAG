@@ -43,6 +43,7 @@ def build_llm(settings: Settings) -> LLMClient:
         api_key=settings.llm_key(),
         disable_thinking=settings.llm_disable_thinking,
         thinking_switch=settings.llm_thinking_switch,
+        reasoning_effort=settings.llm_reasoning_effort,
         timeout_s=settings.llm_timeout_s,
         max_retries=settings.llm_max_retries,
         retry_base_s=settings.llm_retry_base_s,
